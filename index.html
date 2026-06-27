@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#c8102e">
 <title>Scout Capture – NY Red Bulls</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{
     --red:#c8102e; --red-dk:#9e0c24; --ink:#1f2933; --slate:#52606d;
@@ -145,7 +146,7 @@
       <div class="actions-row">
         <button class="btn-sec new" id="newReport">+ New Report</button>
         <button class="btn-sec save" id="saveReport">Save Current</button>
-        <button class="btn-sec" id="exportAll">Export All (JSON)</button>
+        <button class="btn-sec" id="exportAll">Export All (PDF)</button>
       </div>
       <div class="saved-list" id="savedList">
         <div class="empty-saved">No saved reports yet. Fill in player info and click "Save Current".</div>
@@ -598,13 +599,92 @@ function renderSavedList(){
 
 function exportAllReports(){
   if(savedReports.length === 0){ alert("No reports to export."); return; }
-  const blob = new Blob([JSON.stringify(savedReports, null, 2)], {type: 'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `scout-reports-${new Date().toISOString().split('T')[0]}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 15;
+  const lineHeight = 6;
+  let y = 20;
+
+  // Title
+  doc.setFontSize(18);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(200, 16, 46);
+  doc.text('Scout Reports – NY Red Bulls', margin, y);
+  y += 10;
+  doc.setFontSize(10);
+  doc.setTextColor(100);
+  doc.setFont(undefined, 'normal');
+  doc.text(`Exported: ${new Date().toLocaleDateString()}  |  ${savedReports.length} player${savedReports.length===1?'':'s'}`, margin, y);
+  y += 12;
+
+  savedReports.forEach((r, idx) => {
+    // Check if we need a new page
+    if(y > 260) { doc.addPage(); y = 20; }
+
+    // Player header
+    doc.setFillColor(200, 16, 46);
+    doc.rect(margin, y - 5, pageWidth - margin * 2, 10, 'F');
+    doc.setTextColor(255);
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text(`${r.name || 'Unknown'}  ${r.pos ? '— ' + r.pos : ''}  ${r.overall ? '[' + r.overall + ']' : ''}`, margin + 3, y + 2);
+    y += 12;
+
+    doc.setTextColor(50);
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+
+    // Details
+    const details = [r.club, r.yob, r.jersey ? '#' + r.jersey : '', r.foot].filter(Boolean).join('  ·  ');
+    if(details) { doc.text(details, margin, y); y += lineHeight; }
+    if(r.phys) { doc.text('Build: ' + r.phys, margin, y); y += lineHeight; }
+    if(r.event || r.date) { doc.text([r.event, r.date].filter(Boolean).join(' · '), margin, y); y += lineHeight; }
+
+    // Grid scores
+    if(r.grid && Object.keys(r.grid).length > 0) {
+      y += 2;
+      doc.setFont(undefined, 'bold');
+      doc.text('Attributes:', margin, y);
+      doc.setFont(undefined, 'normal');
+      y += lineHeight;
+      Object.entries(r.grid).forEach(([attr, val]) => {
+        if(y > 275) { doc.addPage(); y = 20; }
+        const stars = val > 0 ? '★'.repeat(val) + '☆'.repeat(5 - val) : '— not observed';
+        doc.text(`  ${attr}: ${stars}`, margin, y);
+        y += lineHeight - 1;
+      });
+    }
+
+    // Weapons
+    if(r.weapons && r.weapons.length > 0) {
+      y += 2;
+      doc.setFont(undefined, 'bold');
+      doc.text('Weapons: ', margin, y);
+      doc.setFont(undefined, 'normal');
+      doc.text(r.weapons.join(', '), margin + 18, y);
+      y += lineHeight;
+    }
+
+    // Notes
+    if(r.notes) {
+      y += 2;
+      doc.setFont(undefined, 'bold');
+      doc.text('Notes:', margin, y);
+      doc.setFont(undefined, 'normal');
+      y += lineHeight;
+      const lines = doc.splitTextToSize(r.notes, pageWidth - margin * 2);
+      lines.forEach(line => {
+        if(y > 275) { doc.addPage(); y = 20; }
+        doc.text(line, margin, y);
+        y += lineHeight - 1;
+      });
+    }
+
+    y += 10; // Space between players
+  });
+
+  doc.save(`scout-reports-${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
 document.getElementById("newReport").onclick = clearForm;
