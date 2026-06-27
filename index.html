@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#c8102e">
+<title>Scout Capture – NY Red Bulls</title>
+<style>
+  :root{
+    --red:#c8102e; --red-dk:#9e0c24; --ink:#1f2933; --slate:#52606d;
+    --mute:#9aa5b1; --line:#e4e7eb; --bg:#eef1f4; --card:#ffffff;
+    --gold:#f5b301; --gold-off:#d2d6dc; --ok:#0b8457; --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:860px;margin:0 auto;padding:18px 16px 120px;}
+  header{display:flex;align-items:center;gap:12px;padding:6px 2px 16px;}
+  .crest{width:34px;height:34px;border-radius:8px;background:var(--red);
+    display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px;}
+  header h1{font-size:19px;margin:0;letter-spacing:-.02em;}
+  header span{display:block;font-size:12px;color:var(--mute);font-weight:500;margin-top:1px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    margin-bottom:14px;overflow:hidden;}
+  .card-h{display:flex;align-items:center;gap:9px;padding:14px 16px;border-bottom:1px solid var(--line);}
+  .card-h .ico{color:var(--red);font-size:15px;}
+  .card-h h2{margin:0;font-size:12.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--slate);}
+  .card-b{padding:16px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:600px){.grid2{grid-template-columns:1fr;}}
+  label.fl{display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--slate);margin-bottom:6px;}
+  input[type=text],input[type=date],input[type=number],select,textarea{
+    width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;
+    font-size:15px;color:var(--ink);background:#fff;font-family:inherit;}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(200,16,46,.12);}
+  textarea{resize:vertical;min-height:96px;line-height:1.45;}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;}
+  .chip{padding:8px 14px;border:1px solid var(--line);border-radius:999px;background:#fff;
+    font-size:14px;font-weight:600;color:var(--slate);cursor:pointer;user-select:none;transition:.12s;}
+  .chip:hover{border-color:var(--mute);}
+  .chip.on{background:var(--red);border-color:var(--red);color:#fff;}
+  .hint{font-size:12px;color:var(--mute);margin:2px 0 0;}
+  /* overall segmented */
+  .seg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+  .seg button{padding:12px 4px;border:1.5px solid var(--line);border-radius:11px;background:#fff;
+    cursor:pointer;font-family:inherit;text-align:center;transition:.12s;}
+  .seg button .g{font-size:20px;font-weight:800;display:block;color:var(--ink);}
+  .seg button .t{font-size:10.5px;color:var(--mute);font-weight:600;margin-top:2px;display:block;}
+  .seg button.on{border-color:var(--red);background:rgba(200,16,46,.06);}
+  .seg button.on .g{color:var(--red);}
+  /* star rows */
+  .srow{display:flex;align-items:center;justify-content:space-between;padding:11px 2px;border-bottom:1px solid #f1f3f5;}
+  .srow:last-child{border-bottom:none;}
+  .srow .nm{font-size:14.5px;font-weight:600;color:var(--ink);}
+  .stars{display:flex;gap:4px;}
+  .star{font-size:22px;line-height:1;color:var(--gold-off);cursor:pointer;transition:transform .08s;}
+  .star:hover{transform:scale(1.12);}
+  .star.lit{color:var(--gold);}
+  .empty-grid{padding:26px 16px;text-align:center;color:var(--mute);font-size:14px;}
+  /* voice */
+  .obs-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+  .mic{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;
+    border-radius:999px;padding:6px 13px;font-size:13px;font-weight:600;color:var(--slate);cursor:pointer;font-family:inherit;}
+  .mic .dot{width:9px;height:9px;border-radius:50%;background:var(--mute);}
+  .mic.live{border-color:var(--red);color:var(--red);}
+  .mic.live .dot{background:var(--red);animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  /* footer / generate */
+  .bar{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.92);
+    backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:12px 16px;}
+  .bar-inner{max-width:860px;margin:0 auto;display:flex;gap:12px;align-items:center;}
+  .route{flex:1;font-size:13px;color:var(--slate);}
+  .route b{color:var(--ink);}
+  .pill{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;margin-left:6px;}
+  .pill.A{background:rgba(200,16,46,.12);color:var(--red);}
+  .pill.B{background:rgba(11,132,87,.12);color:var(--ok);}
+  .pill.C{background:#eceff1;color:var(--slate);}
+  .pill.D{background:#f3e8e8;color:#8a8a8a;}
+  .gen{background:var(--red);color:#fff;border:none;border-radius:11px;padding:13px 22px;
+    font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .gen:hover{background:var(--red-dk);}
+  /* output */
+  #out{display:none;}
+  pre.report{white-space:pre-wrap;background:#0f1419;color:#e6edf3;border-radius:12px;
+    padding:16px;font-size:13px;line-height:1.55;font-family:"SF Mono",ui-monospace,Menlo,monospace;margin:0;}
+  .copy{margin-top:10px;border:1px solid var(--line);background:#fff;border-radius:10px;
+    padding:9px 16px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--slate);}
+  .copy.done{border-color:var(--ok);color:var(--ok);}
+  /* suggested grade */
+  .sugg-top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .sugg-letter{font-size:38px;font-weight:800;width:62px;height:62px;border-radius:14px;display:flex;align-items:center;justify-content:center;}
+  .sugg-letter.A{background:rgba(200,16,46,.1);color:var(--red);}
+  .sugg-letter.B{background:rgba(11,132,87,.12);color:var(--ok);}
+  .sugg-letter.C{background:#eceff1;color:var(--slate);}
+  .sugg-letter.D{background:#f3e8e8;color:#8a8a8a;}
+  .sugg-meta{flex:1;min-width:160px;}
+  .sugg-score{font-size:14.5px;font-weight:700;color:var(--ink);}
+  .sugg-adj{font-size:12px;color:var(--mute);margin-top:3px;}
+  .apply{border:1px solid var(--red);background:#fff;color:var(--red);border-radius:10px;padding:10px 15px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .apply:hover{background:var(--red);color:#fff;}
+  .sugg-flags{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px;}
+  .tag{font-size:12px;font-weight:600;padding:5px 11px;border-radius:999px;}
+  .tag.up{background:rgba(11,132,87,.1);color:var(--ok);}
+  .tag.dn{background:rgba(200,16,46,.08);color:var(--red);}
+  .tag.na{background:#eef1f4;color:var(--mute);}
+  .sugg-mismatch{font-size:12.5px;color:var(--slate);margin-top:11px;line-height:1.4;}
+  /* saved reports */
+  .saved-list{display:flex;flex-direction:column;gap:8px;}
+  .saved-item{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;transition:.12s;}
+  .saved-item:hover{border-color:var(--mute);background:#fafbfc;}
+  .saved-item.active{border-color:var(--red);background:rgba(200,16,46,.04);}
+  .saved-item .info{flex:1;min-width:0;}
+  .saved-item .name{font-size:14.5px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .saved-item .meta{font-size:12px;color:var(--mute);margin-top:2px;}
+  .saved-item .grade{font-size:16px;font-weight:800;padding:4px 10px;border-radius:8px;min-width:32px;text-align:center;}
+  .saved-item .grade.A{background:rgba(200,16,46,.1);color:var(--red);}
+  .saved-item .grade.B{background:rgba(11,132,87,.12);color:var(--ok);}
+  .saved-item .grade.C{background:#eceff1;color:var(--slate);}
+  .saved-item .grade.D{background:#f3e8e8;color:#8a8a8a;}
+  .saved-item .del{padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--mute);font-size:12px;font-weight:600;cursor:pointer;}
+  .saved-item .del:hover{border-color:#e53935;color:#e53935;background:#fff5f5;}
+  .empty-saved{padding:20px;text-align:center;color:var(--mute);font-size:14px;}
+  .actions-row{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .btn-sec{border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 16px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--slate);}
+  .btn-sec:hover{border-color:var(--mute);background:#fafbfc;}
+  .btn-sec.save{border-color:var(--ok);color:var(--ok);}
+  .btn-sec.save:hover{background:var(--ok);color:#fff;}
+  .btn-sec.new{border-color:var(--red);color:var(--red);}
+  .btn-sec.new:hover{background:var(--red);color:#fff;}
+  .export-btns{display:flex;gap:8px;margin-top:10px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="crest">RB</div>
+    <div><h1>Scout Capture</h1><span>Grade fast · position-aware · type or speak</span></div>
+  </header>
+
+  <!-- SAVED REPORTS -->
+  <div class="card">
+    <div class="card-h"><span class="ico">◉</span><h2>Saved Reports <span id="reportCount" style="color:var(--mute);font-weight:500;text-transform:none;"></span></h2></div>
+    <div class="card-b">
+      <div class="actions-row">
+        <button class="btn-sec new" id="newReport">+ New Report</button>
+        <button class="btn-sec save" id="saveReport">Save Current</button>
+        <button class="btn-sec" id="exportAll">Export All (JSON)</button>
+      </div>
+      <div class="saved-list" id="savedList">
+        <div class="empty-saved">No saved reports yet. Fill in player info and click "Save Current".</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAYER INFO -->
+  <div class="card">
+    <div class="card-h"><span class="ico">●</span><h2>Player Info</h2></div>
+    <div class="card-b">
+      <div class="grid2">
+        <div><label class="fl">Player Name</label><input id="name" type="text" placeholder="e.g., Mamoudou Diakite"></div>
+        <div><label class="fl">Club</label><input id="club" type="text" placeholder="e.g., Penn Fusion"></div>
+        <div><label class="fl">Jersey #</label><input id="jersey" type="number" placeholder="#"></div>
+        <div><label class="fl">Year of Birth</label><input id="yob" type="number" placeholder="2012"></div>
+        <div><label class="fl">Foot</label>
+          <select id="foot"><option value="">Select…</option><option>Right</option><option>Left</option><option>Both</option></select></div>
+        <div><label class="fl">Physical profile <span style="color:var(--mute);font-weight:500;text-transform:none;">(not graded)</span></label>
+          <select id="phys"><option value="">Select…</option><option>Early developer</option><option>On age</option><option>Undersized / late developer</option></select></div>
+        <div><label class="fl">Event</label><input id="event" type="text" placeholder="e.g., ECNL Playoffs"></div>
+        <div><label class="fl">Date</label><input id="date" type="date"></div>
+      </div>
+      <div style="margin-top:14px">
+        <label class="fl">Primary Position <span style="color:var(--mute);font-weight:500;text-transform:none;">— loads the grid</span></label>
+        <div class="chips" id="posChips"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- UNIVERSAL -->
+  <div class="card">
+    <div class="card-h"><span class="ico">★</span><h2>Every Player</h2></div>
+    <div class="card-b">
+      <label class="fl">Overall — the routing call</label>
+      <div class="seg" id="overall">
+        <button data-g="A"><span class="g">A</span><span class="t">Priority + report</span></button>
+        <button data-g="B"><span class="g">B</span><span class="t">Monitor + report</span></button>
+        <button data-g="C"><span class="g">C</span><span class="t">Database only</span></button>
+        <button data-g="D"><span class="g">D</span><span class="t">Pass</span></button>
+      </div>
+      <div style="margin-top:16px">
+        <label class="fl">Pressing / work-rate against ball <span style="color:var(--mute);font-weight:500;text-transform:none;">— graded on everyone (RB DNA)</span></label>
+        <div id="pressRow"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- POSITION GRID -->
+  <div class="card">
+    <div class="card-h"><span class="ico">▥</span><h2 id="gridTitle">Position Grid</h2></div>
+    <div class="card-b" id="gridBody">
+      <div class="empty-grid">Select a primary position above to load its grading grid.</div>
+    </div>
+  </div>
+
+  <!-- SUGGESTED GRADE -->
+  <div class="card" id="sugg" style="display:none">
+    <div class="card-h"><span class="ico">⚖</span><h2>Suggested Grade <span style="color:var(--mute);font-weight:500;text-transform:none;">— from the grid, your call overrides</span></h2></div>
+    <div class="card-b">
+      <div class="sugg-top">
+        <div class="sugg-letter" id="sLetter">–</div>
+        <div class="sugg-meta">
+          <div class="sugg-score" id="sScore"></div>
+          <div class="sugg-adj" id="sAdj"></div>
+        </div>
+        <button class="apply" id="applySugg">Apply to Overall</button>
+      </div>
+      <div class="sugg-flags" id="sFlags"></div>
+      <div class="sugg-mismatch" id="sMismatch"></div>
+    </div>
+  </div>
+
+  <!-- SPECIAL WEAPONS -->
+  <div class="card">
+    <div class="card-h"><span class="ico">✦</span><h2>Special Weapons</h2></div>
+    <div class="card-b">
+      <p class="hint" style="margin-top:0">Identifying traits — select any</p>
+      <div class="chips" id="weapons"></div>
+    </div>
+  </div>
+
+  <!-- OBSERVATIONS -->
+  <div class="card">
+    <div class="card-h"><span class="ico">✎</span><h2>Observations</h2></div>
+    <div class="card-b">
+      <div class="obs-head">
+        <label class="fl" style="margin:0">Shorthand notes</label>
+        <button class="mic" id="mic"><span class="dot"></span><span id="micTxt">Speak</span></button>
+      </div>
+      <textarea id="notes" placeholder="Massy run, shot blocked. Scored using body to turn defender. Knows how to use the half-space…"></textarea>
+      <p class="hint" id="micHint"></p>
+    </div>
+  </div>
+
+  <div id="out" class="card">
+    <div class="card-h"><span class="ico">▣</span><h2>Generated Entry</h2></div>
+    <div class="card-b">
+      <pre class="report" id="report"></pre>
+      <div class="export-btns">
+        <button class="copy" id="copy">Copy entry</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="bar">
+  <div class="bar-inner">
+    <div class="route" id="route">Set an <b>Overall</b> grade to see routing.</div>
+    <button class="gen" id="gen">Generate</button>
+  </div>
+</div>
+
+<script>
+const POSITIONS = ["GK","RB","CB","LB","CDM","CM","LW","RW","ST"];
+const GRIDS = {
+  GK:  {title:"Goalkeeper", attrs:["Shot-stopping","Distribution (feet)","Command of box","1v1 / sweeping"]},
+  FB:  {title:"Full-back",  attrs:["1v1 defending","Defending the wide area","Recovery speed","Attacking output"]},
+  CB:  {title:"Centre-back",attrs:["1v1 defending","Defending space in behind","Aerial duels","Distribution / ball-playing"]},
+  CDM: {title:"Holding mid (6)",attrs:["Ball-winning","Decision making","Range of passing","Line breaker / press resistance"]},
+  CM:  {title:"Central mid (8)",attrs:["Press resistance","Range of passing","Ball-winning","Final-third actions","Engine / box-to-box"]},
+  WING:{title:"Winger",     attrs:["1v1 dribbling","Agility / balance","Final ball / creation","Finishing"]},
+  ST:  {title:"Striker",    attrs:["Finishing","Movement / runs","Hold-up & link","1v1 / dribble","Aerial"]}
+};
+const POS_TO_GRID = {GK:"GK",RB:"FB",LB:"FB",CB:"CB",CDM:"CDM",CM:"CM",LW:"WING",RW:"WING",ST:"ST"};
+const WEIGHTS = {
+  GK:{"Shot-stopping":35,"Distribution (feet)":25,"Command of box":25,"1v1 / sweeping":15},
+  FB:{"1v1 defending":30,"Defending the wide area":25,"Recovery speed":20,"Attacking output":25},
+  CB:{"1v1 defending":30,"Defending space in behind":25,"Aerial duels":25,"Distribution / ball-playing":20},
+  CDM:{"Ball-winning":30,"Decision making":25,"Range of passing":20,"Line breaker / press resistance":25},
+  CM:{"Press resistance":22,"Range of passing":23,"Ball-winning":20,"Final-third actions":20,"Engine / box-to-box":15},
+  WING:{"1v1 dribbling":32,"Agility / balance":18,"Final ball / creation":28,"Finishing":22},
+  ST:{"Finishing":30,"Movement / runs":25,"Hold-up & link":20,"1v1 / dribble":15,"Aerial":10}
+};
+const WEAPONS = ["1v1 Attacker","1v1 Defender","Ball Carrier","Pressing","Finisher","Playmaker","Aerial","Engine","Game Reader","Press Resistant","Physical","Speed"];
+
+const state = {pos:null, overall:null, press:0, grid:{}, weapons:new Set(), suggest:null};
+let currentReportId = null;
+let savedReports = JSON.parse(localStorage.getItem('scoutReports') || '[]');
+
+// build position chips
+const posWrap = document.getElementById("posChips");
+POSITIONS.forEach(p=>{
+  const c=document.createElement("div"); c.className="chip"; c.textContent=p;
+  c.onclick=()=>{ document.querySelectorAll("#posChips .chip").forEach(x=>x.classList.remove("on"));
+    c.classList.add("on"); state.pos=p; renderGrid(POS_TO_GRID[p]); };
+  posWrap.appendChild(c);
+});
+
+// build weapon chips
+const wWrap=document.getElementById("weapons");
+WEAPONS.forEach(w=>{
+  const c=document.createElement("div"); c.className="chip"; c.textContent=w;
+  c.onclick=()=>{ c.classList.toggle("on"); c.classList.contains("on")?state.weapons.add(w):state.weapons.delete(w); };
+  wWrap.appendChild(c);
+});
+
+// star widget builder
+function starRow(name, getVal, setVal){
+  const row=document.createElement("div"); row.className="srow";
+  const nm=document.createElement("div"); nm.className="nm"; nm.textContent=name;
+  const stars=document.createElement("div"); stars.className="stars";
+  function paint(){ [...stars.children].forEach((s,i)=> s.classList.toggle("lit", i<getVal())); }
+  for(let i=1;i<=5;i++){
+    const s=document.createElement("span"); s.className="star"; s.textContent="★";
+    s.onclick=()=>{ setVal(getVal()===i?0:i); paint(); if(window.recompute)recompute(); };
+    stars.appendChild(s);
+  }
+  paint(); row.appendChild(nm); row.appendChild(stars); return row;
+}
+
+// pressing (universal)
+document.getElementById("pressRow").appendChild(
+  starRow("Pressing intensity", ()=>state.press, v=>state.press=v)
+);
+
+// overall segmented
+document.querySelectorAll("#overall button").forEach(b=>{
+  b.onclick=()=>{ document.querySelectorAll("#overall button").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on"); state.overall=b.dataset.g; updateRoute(); recompute(); };
+});
+
+function renderGrid(key){
+  const g=GRIDS[key]; const body=document.getElementById("gridBody");
+  document.getElementById("gridTitle").textContent = g.title + " — grid";
+  state.grid={}; body.innerHTML="";
+  g.attrs.forEach(a=>{ state.grid[a]=0;
+    body.appendChild(starRow(a, ()=>state.grid[a], v=>state.grid[a]=v)); });
+  recompute();
+}
+
+const ROUTES={
+  A:{label:"Priority — full report + shadow-team candidate", cls:"A"},
+  B:{label:"Monitor list — write full report", cls:"B"},
+  C:{label:"Database only — log the row, no report", cls:"C"},
+  D:{label:"Pass — no further action", cls:"D"}
+};
+function updateRoute(){
+  const r=document.getElementById("route");
+  if(!state.overall){ r.innerHTML="Set an <b>Overall</b> grade to see routing."; return; }
+  const o=ROUTES[state.overall];
+  r.innerHTML=`Routing<span class="pill ${o.cls}">${state.overall}</span> <b>${o.label}</b>`;
+}
+
+// ---- auto-grade engine ----
+function recompute(){
+  const card=document.getElementById("sugg");
+  if(!state.pos){ card.style.display="none"; return; }
+  const key=POS_TO_GRID[state.pos], w=WEIGHTS[key], attrs=GRIDS[key].attrs;
+
+  const rated   = attrs.filter(a=>state.grid[a]>0);
+  const notSeen = attrs.filter(a=>state.grid[a]===0);
+  if(rated.length===0){ card.style.display="none"; return; }
+
+  let sum=0,wsum=0; rated.forEach(a=>{ sum+=state.grid[a]*w[a]; wsum+=w[a]; });
+  const base=sum/wsum;
+  const top2=[...rated].sort((a,b)=>w[b]-w[a]).slice(0,2);
+
+  let wb=0; if(top2.some(a=>state.grid[a]===5)) wb=0.3; else if(rated.some(a=>state.grid[a]===5)) wb=0.15;
+  let hp=0; if(top2.some(a=>state.grid[a]===1)) hp=0.4; else if(rated.some(a=>state.grid[a]===1)) hp=0.3;
+  let pa=state.press>0 ? (state.press-3)*0.1 : 0;
+  const score=Math.max(0,Math.min(5, base+wb-hp+pa));
+  let letter = score>=3.8?"A" : score>=2.8?"B" : score>=2.0?"C" : "D";
+
+  const thin = rated.length<2;
+  if(thin && letter==="A") letter="B";
+  state.suggest={letter,score,base,observed:rated.length,total:attrs.length};
+
+  card.style.display="block";
+  const L=document.getElementById("sLetter"); L.textContent=thin?"?":letter; L.className="sugg-letter "+(thin?"":letter);
+  document.getElementById("sScore").textContent="Weighted "+base.toFixed(1)+"  ·  adjusted "+score.toFixed(1)+" / 5  ·  "+rated.length+"/"+attrs.length+" seen";
+  const bits=[]; if(wb)bits.push("+"+wb.toFixed(2)+" elite weapon"); if(hp)bits.push("−"+hp.toFixed(2)+" concern"); if(pa)bits.push((pa>0?"+":"−")+Math.abs(pa).toFixed(2)+" pressing");
+  document.getElementById("sAdj").textContent = bits.length?bits.join("    "):"no modifiers applied";
+
+  const flags=document.getElementById("sFlags"); flags.innerHTML="";
+  rated.forEach(a=>{ if(state.grid[a]===5){const t=document.createElement("span");t.className="tag up";t.textContent="Elite · "+a;flags.appendChild(t);} });
+  rated.forEach(a=>{ if(state.grid[a]===1){const t=document.createElement("span");t.className="tag dn";t.textContent="Concern · "+a;flags.appendChild(t);} });
+  notSeen.forEach(a=>{ const t=document.createElement("span");t.className="tag na";t.textContent="Not seen · "+a;flags.appendChild(t); });
+
+  const notes=[];
+  if(thin) notes.push("Thin sample — only "+rated.length+" attribute"+(rated.length===1?"":"s")+" observed. Provisional grade; A is held back until you've seen more.");
+  else if(notSeen.length) notes.push("Graded on "+rated.length+" of "+attrs.length+" — blanks are excluded, not counted against him.");
+  if(state.overall && state.overall!==letter) notes.push("You graded "+state.overall+"; the grid maths to "+letter+". Trust your eyes — the engine only sees stars.");
+  document.getElementById("sMismatch").innerHTML = notes.join("<br>");
+}
+
+document.getElementById("applySugg").onclick=()=>{
+  if(!state.suggest) return;
+  const g=state.suggest.letter;
+  document.querySelectorAll("#overall button").forEach(x=>x.classList.toggle("on", x.dataset.g===g));
+  state.overall=g; updateRoute(); recompute();
+};
+
+// voice dictation
+const mic=document.getElementById("mic"), micTxt=document.getElementById("micTxt"),
+      micHint=document.getElementById("micHint"), notes=document.getElementById("notes");
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec=null, listening=false;
+if(!SR){ micHint.textContent="Voice needs Chrome or Safari — typing works everywhere."; }
+mic.onclick=()=>{
+  if(!SR){ notes.focus(); return; }
+  if(listening){ rec.stop(); return; }
+  rec=new SR(); rec.lang="en-US"; rec.interimResults=true; rec.continuous=true;
+  let base=notes.value;
+  rec.onstart=()=>{ listening=true; mic.classList.add("live"); micTxt.textContent="Listening… tap to stop"; micHint.textContent=""; };
+  rec.onerror=(e)=>{ micHint.textContent = e.error==="not-allowed"
+      ? "Mic blocked — allow microphone access (works on your own deploy)." : "Voice error: "+e.error; };
+  rec.onend=()=>{ listening=false; mic.classList.remove("live"); micTxt.textContent="Speak"; };
+  rec.onresult=(e)=>{ let t=""; for(let i=0;i<e.results.length;i++) t+=e.results[i][0].transcript;
+    notes.value=(base?base+" ":"")+t; };
+  try{ rec.start(); }catch(err){ micHint.textContent="Could not start mic in this frame — try your deployed page."; }
+};
+
+// star string
+const ss=n=>"★".repeat(n)+"☆".repeat(5-n);
+
+// ---- SAVE/LOAD SYSTEM ----
+function getFormData(){
+  return {
+    name: document.getElementById("name").value,
+    club: document.getElementById("club").value,
+    jersey: document.getElementById("jersey").value,
+    yob: document.getElementById("yob").value,
+    foot: document.getElementById("foot").value,
+    phys: document.getElementById("phys").value,
+    event: document.getElementById("event").value,
+    date: document.getElementById("date").value,
+    pos: state.pos,
+    overall: state.overall,
+    press: state.press,
+    grid: {...state.grid},
+    weapons: [...state.weapons],
+    notes: document.getElementById("notes").value
+  };
+}
+
+function setFormData(data){
+  document.getElementById("name").value = data.name || '';
+  document.getElementById("club").value = data.club || '';
+  document.getElementById("jersey").value = data.jersey || '';
+  document.getElementById("yob").value = data.yob || '';
+  document.getElementById("foot").value = data.foot || '';
+  document.getElementById("phys").value = data.phys || '';
+  document.getElementById("event").value = data.event || '';
+  document.getElementById("date").value = data.date || '';
+  document.getElementById("notes").value = data.notes || '';
+
+  // Position
+  state.pos = data.pos;
+  document.querySelectorAll("#posChips .chip").forEach(c => {
+    c.classList.toggle("on", c.textContent === data.pos);
+  });
+  if(data.pos) renderGrid(POS_TO_GRID[data.pos]);
+
+  // Overall
+  state.overall = data.overall;
+  document.querySelectorAll("#overall button").forEach(b => {
+    b.classList.toggle("on", b.dataset.g === data.overall);
+  });
+  updateRoute();
+
+  // Press - rebuild stars
+  state.press = data.press || 0;
+  const pressRow = document.getElementById("pressRow");
+  pressRow.innerHTML = '';
+  pressRow.appendChild(starRow("Pressing intensity", ()=>state.press, v=>state.press=v));
+
+  // Grid values
+  if(data.grid && data.pos){
+    Object.entries(data.grid).forEach(([k,v]) => state.grid[k] = v);
+    renderGridWithValues(POS_TO_GRID[data.pos], data.grid);
+  }
+
+  // Weapons
+  state.weapons = new Set(data.weapons || []);
+  document.querySelectorAll("#weapons .chip").forEach(c => {
+    c.classList.toggle("on", state.weapons.has(c.textContent));
+  });
+
+  recompute();
+}
+
+function renderGridWithValues(key, values){
+  const g=GRIDS[key]; const body=document.getElementById("gridBody");
+  document.getElementById("gridTitle").textContent = g.title + " — grid";
+  state.grid={}; body.innerHTML="";
+  g.attrs.forEach(a=>{
+    state.grid[a] = values[a] || 0;
+    body.appendChild(starRow(a, ()=>state.grid[a], v=>state.grid[a]=v));
+  });
+  recompute();
+}
+
+function clearForm(){
+  currentReportId = null;
+  document.getElementById("name").value = '';
+  document.getElementById("club").value = '';
+  document.getElementById("jersey").value = '';
+  document.getElementById("yob").value = '';
+  document.getElementById("foot").value = '';
+  document.getElementById("phys").value = '';
+  document.getElementById("event").value = '';
+  document.getElementById("date").value = '';
+  document.getElementById("notes").value = '';
+  state.pos = null;
+  state.overall = null;
+  state.press = 0;
+  state.grid = {};
+  state.weapons = new Set();
+  document.querySelectorAll("#posChips .chip").forEach(c => c.classList.remove("on"));
+  document.querySelectorAll("#overall button").forEach(b => b.classList.remove("on"));
+  document.querySelectorAll("#weapons .chip").forEach(c => c.classList.remove("on"));
+  document.getElementById("gridBody").innerHTML = '<div class="empty-grid">Select a primary position above to load its grading grid.</div>';
+  document.getElementById("gridTitle").textContent = "Position Grid";
+  const pressRow = document.getElementById("pressRow");
+  pressRow.innerHTML = '';
+  pressRow.appendChild(starRow("Pressing intensity", ()=>state.press, v=>state.press=v));
+  document.getElementById("sugg").style.display = "none";
+  document.getElementById("out").style.display = "none";
+  updateRoute();
+  renderSavedList();
+}
+
+function saveReport(){
+  const data = getFormData();
+  if(!data.name.trim()){ alert("Please enter a player name before saving."); return; }
+
+  const report = {
+    id: currentReportId || Date.now().toString(),
+    ...data,
+    savedAt: new Date().toISOString()
+  };
+
+  const idx = savedReports.findIndex(r => r.id === report.id);
+  if(idx >= 0) savedReports[idx] = report;
+  else savedReports.unshift(report);
+
+  currentReportId = report.id;
+  localStorage.setItem('scoutReports', JSON.stringify(savedReports));
+  renderSavedList();
+}
+
+function loadReport(id){
+  const report = savedReports.find(r => r.id === id);
+  if(!report) return;
+  currentReportId = id;
+  setFormData(report);
+  renderSavedList();
+}
+
+function deleteReport(id, e){
+  e.stopPropagation();
+  if(!confirm("Delete this report?")) return;
+  savedReports = savedReports.filter(r => r.id !== id);
+  localStorage.setItem('scoutReports', JSON.stringify(savedReports));
+  if(currentReportId === id) clearForm();
+  else renderSavedList();
+}
+
+function renderSavedList(){
+  const list = document.getElementById("savedList");
+  document.getElementById("reportCount").textContent = savedReports.length ? `(${savedReports.length})` : '';
+
+  if(savedReports.length === 0){
+    list.innerHTML = '<div class="empty-saved">No saved reports yet. Fill in player info and click "Save Current".</div>';
+    return;
+  }
+
+  list.innerHTML = savedReports.map(r => `
+    <div class="saved-item ${r.id === currentReportId ? 'active' : ''}" data-id="${r.id}">
+      <div class="info">
+        <div class="name">${r.name || 'Unknown'}</div>
+        <div class="meta">${[r.club, r.pos, r.event].filter(Boolean).join(' · ') || 'No details'}</div>
+      </div>
+      ${r.overall ? `<div class="grade ${r.overall}">${r.overall}</div>` : ''}
+      <button class="del" data-id="${r.id}">Delete</button>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('.saved-item').forEach(item => {
+    item.onclick = (e) => {
+      if(e.target.classList.contains('del')) return;
+      loadReport(item.dataset.id);
+    };
+  });
+  list.querySelectorAll('.del').forEach(btn => {
+    btn.onclick = (e) => deleteReport(btn.dataset.id, e);
+  });
+}
+
+function exportAllReports(){
+  if(savedReports.length === 0){ alert("No reports to export."); return; }
+  const blob = new Blob([JSON.stringify(savedReports, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `scout-reports-${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById("newReport").onclick = clearForm;
+document.getElementById("saveReport").onclick = saveReport;
+document.getElementById("exportAll").onclick = exportAllReports;
+
+// generate entry
+document.getElementById("gen").onclick=()=>{
+  const v=id=>document.getElementById(id).value.trim();
+  const L=[];
+  const head=[v("club")||"—", v("yob")&&v("yob"), v("jersey")&&("#"+v("jersey"))].filter(Boolean).join(" · ");
+  L.push(head);
+  L.push((v("name")||"Unknown")+(state.pos?"  —  "+state.pos:"")+(v("foot")?" ("+v("foot")+")":""));
+  if(v("phys")) L.push("Build: "+v("phys"));
+  L.push("");
+  L.push("OVERALL: "+(state.overall||"—")+"   |   Pressing "+ss(state.press));
+  if(state.suggest) L.push("Grid suggestion: "+state.suggest.letter+"  ("+state.suggest.score.toFixed(1)+"/5, "+state.suggest.observed+"/"+state.suggest.total+" seen)");
+  if(state.pos){
+    L.push("— "+GRIDS[POS_TO_GRID[state.pos]].title+" —");
+    Object.entries(state.grid).forEach(([k,val])=> L.push("  "+k.padEnd(28," ")+" "+(val>0?ss(val):"—  not observed")));
+  }
+  if(state.weapons.size) { L.push(""); L.push("Weapons: "+[...state.weapons].join(", ")); }
+  if(v("notes")){ L.push(""); L.push("Notes: "+v("notes")); }
+  if(v("event")||v("date")){ L.push(""); L.push([v("event"),v("date")].filter(Boolean).join(" · ")); }
+  if(state.overall){ L.push(""); L.push("→ "+ROUTES[state.overall].label); }
+  document.getElementById("report").textContent=L.join("\n");
+  document.getElementById("out").style.display="block";
+  document.getElementById("out").scrollIntoView({behavior:"smooth",block:"start"});
+};
+
+document.getElementById("copy").onclick=()=>{
+  navigator.clipboard.writeText(document.getElementById("report").textContent).then(()=>{
+    const b=document.getElementById("copy"); b.textContent="Copied ✓"; b.classList.add("done");
+    setTimeout(()=>{b.textContent="Copy entry"; b.classList.remove("done");},1600);
+  });
+};
+
+// Init
+renderSavedList();
+</script>
+</body>
+</html>
