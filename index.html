@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#c8102e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>Scout Capture – NY Red Bulls</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -42,7 +44,6 @@
   .chip:hover{border-color:var(--mute);}
   .chip.on{background:var(--red);border-color:var(--red);color:#fff;}
   .hint{font-size:12px;color:var(--mute);margin:2px 0 0;}
-  /* overall segmented */
   .seg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
   .seg button{padding:12px 4px;border:1.5px solid var(--line);border-radius:11px;background:#fff;
     cursor:pointer;font-family:inherit;text-align:center;transition:.12s;}
@@ -50,7 +51,6 @@
   .seg button .t{font-size:10.5px;color:var(--mute);font-weight:600;margin-top:2px;display:block;}
   .seg button.on{border-color:var(--red);background:rgba(200,16,46,.06);}
   .seg button.on .g{color:var(--red);}
-  /* star rows */
   .srow{display:flex;align-items:center;justify-content:space-between;padding:11px 2px;border-bottom:1px solid #f1f3f5;}
   .srow:last-child{border-bottom:none;}
   .srow .nm{font-size:14.5px;font-weight:600;color:var(--ink);}
@@ -59,7 +59,6 @@
   .star:hover{transform:scale(1.12);}
   .star.lit{color:var(--gold);}
   .empty-grid{padding:26px 16px;text-align:center;color:var(--mute);font-size:14px;}
-  /* voice */
   .obs-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
   .mic{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;
     border-radius:999px;padding:6px 13px;font-size:13px;font-weight:600;color:var(--slate);cursor:pointer;font-family:inherit;}
@@ -67,9 +66,8 @@
   .mic.live{border-color:var(--red);color:var(--red);}
   .mic.live .dot{background:var(--red);animation:pulse 1s infinite;}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-  /* footer / generate */
   .bar{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.92);
-    backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:12px 16px;}
+    backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:12px 16px;z-index:100;}
   .bar-inner{max-width:860px;margin:0 auto;display:flex;gap:12px;align-items:center;}
   .route{flex:1;font-size:13px;color:var(--slate);}
   .route b{color:var(--ink);}
@@ -81,14 +79,7 @@
   .gen{background:var(--red);color:#fff;border:none;border-radius:11px;padding:13px 22px;
     font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
   .gen:hover{background:var(--red-dk);}
-  /* output */
-  #out{display:none;}
-  pre.report{white-space:pre-wrap;background:#0f1419;color:#e6edf3;border-radius:12px;
-    padding:16px;font-size:13px;line-height:1.55;font-family:"SF Mono",ui-monospace,Menlo,monospace;margin:0;}
-  .copy{margin-top:10px;border:1px solid var(--line);background:#fff;border-radius:10px;
-    padding:9px 16px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--slate);}
-  .copy.done{border-color:var(--ok);color:var(--ok);}
-  /* suggested grade */
+  .gen:disabled{background:var(--mute);cursor:not-allowed;}
   .sugg-top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
   .sugg-letter{font-size:38px;font-weight:800;width:62px;height:62px;border-radius:14px;display:flex;align-items:center;justify-content:center;}
   .sugg-letter.A{background:rgba(200,16,46,.1);color:var(--red);}
@@ -106,8 +97,14 @@
   .tag.dn{background:rgba(200,16,46,.08);color:var(--red);}
   .tag.na{background:#eef1f4;color:var(--mute);}
   .sugg-mismatch{font-size:12.5px;color:var(--slate);margin-top:11px;line-height:1.4;}
-  /* saved reports */
-  .saved-list{display:flex;flex-direction:column;gap:8px;}
+  /* Tabs */
+  .tabs{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:14px;}
+  .tab{padding:14px;text-align:center;font-size:14px;font-weight:600;color:var(--slate);background:#fff;cursor:pointer;border:none;font-family:inherit;}
+  .tab.on{background:var(--red);color:#fff;}
+  /* Saved list */
+  .search-box{margin-bottom:14px;}
+  .search-box input{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;font-size:15px;}
+  .saved-list{display:flex;flex-direction:column;gap:8px;max-height:60vh;overflow-y:auto;}
   .saved-item{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;transition:.12s;}
   .saved-item:hover{border-color:var(--mute);background:#fafbfc;}
   .saved-item.active{border-color:var(--red);background:rgba(200,16,46,.04);}
@@ -121,133 +118,145 @@
   .saved-item .grade.D{background:#f3e8e8;color:#8a8a8a;}
   .saved-item .del{padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--mute);font-size:12px;font-weight:600;cursor:pointer;}
   .saved-item .del:hover{border-color:#e53935;color:#e53935;background:#fff5f5;}
-  .empty-saved{padding:20px;text-align:center;color:var(--mute);font-size:14px;}
-  .actions-row{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .empty-saved{padding:30px;text-align:center;color:var(--mute);font-size:14px;}
+  .actions-row{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
   .btn-sec{border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 16px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--slate);}
   .btn-sec:hover{border-color:var(--mute);background:#fafbfc;}
-  .btn-sec.save{border-color:var(--ok);color:var(--ok);}
-  .btn-sec.save:hover{background:var(--ok);color:#fff;}
-  .btn-sec.new{border-color:var(--red);color:var(--red);}
-  .btn-sec.new:hover{background:var(--red);color:#fff;}
-  .export-btns{display:flex;gap:8px;margin-top:10px;}
+  .btn-sec.pdf{border-color:var(--red);color:var(--red);}
+  .btn-sec.pdf:hover{background:var(--red);color:#fff;}
+  .refresh{margin-left:auto;font-size:13px;color:var(--mute);cursor:pointer;padding:8px 12px;}
+  .refresh:hover{color:var(--ink);}
+  .loading{text-align:center;padding:40px;color:var(--mute);}
+  .status{position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:10px;font-size:14px;font-weight:600;z-index:200;opacity:0;transition:opacity .3s;}
+  .status.show{opacity:1;}
+  .status.ok{background:var(--ok);color:#fff;}
+  .status.err{background:#e53935;color:#fff;}
 </style>
 </head>
 <body>
+<div id="status" class="status"></div>
+
 <div class="wrap">
   <header>
     <div class="crest">RB</div>
-    <div><h1>Scout Capture</h1><span>Grade fast · position-aware · type or speak</span></div>
+    <div><h1>Scout Capture</h1><span>Grade fast · position-aware · synced</span></div>
   </header>
 
-  <!-- SAVED REPORTS -->
-  <div class="card">
-    <div class="card-h"><span class="ico">◉</span><h2>Saved Reports <span id="reportCount" style="color:var(--mute);font-weight:500;text-transform:none;"></span></h2></div>
-    <div class="card-b">
-      <div class="actions-row">
-        <button class="btn-sec new" id="newReport">+ New Report</button>
-        <button class="btn-sec save" id="saveReport">Save Current</button>
-        <button class="btn-sec" id="exportAll">Export All (PDF)</button>
-      </div>
-      <div class="saved-list" id="savedList">
-        <div class="empty-saved">No saved reports yet. Fill in player info and click "Save Current".</div>
-      </div>
-    </div>
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab on" id="tabNew">New Report</button>
+    <button class="tab" id="tabSaved">Saved Reports</button>
   </div>
 
-  <!-- PLAYER INFO -->
-  <div class="card">
-    <div class="card-h"><span class="ico">●</span><h2>Player Info</h2></div>
-    <div class="card-b">
-      <div class="grid2">
-        <div><label class="fl">Player Name</label><input id="name" type="text" placeholder="e.g., Mamoudou Diakite"></div>
-        <div><label class="fl">Club</label><input id="club" type="text" placeholder="e.g., Penn Fusion"></div>
-        <div><label class="fl">Jersey #</label><input id="jersey" type="number" placeholder="#"></div>
-        <div><label class="fl">Year of Birth</label><input id="yob" type="number" placeholder="2012"></div>
-        <div><label class="fl">Foot</label>
-          <select id="foot"><option value="">Select…</option><option>Right</option><option>Left</option><option>Both</option></select></div>
-        <div><label class="fl">Physical profile <span style="color:var(--mute);font-weight:500;text-transform:none;">(not graded)</span></label>
-          <select id="phys"><option value="">Select…</option><option>Early developer</option><option>On age</option><option>Undersized / late developer</option></select></div>
-        <div><label class="fl">Event</label><input id="event" type="text" placeholder="e.g., ECNL Playoffs"></div>
-        <div><label class="fl">Date</label><input id="date" type="date"></div>
+  <!-- SAVED REPORTS VIEW -->
+  <div id="savedView" style="display:none">
+    <div class="card">
+      <div class="card-h">
+        <span class="ico">◉</span>
+        <h2>Saved Reports <span id="reportCount" style="color:var(--mute);font-weight:500;text-transform:none;"></span></h2>
+        <span class="refresh" id="refreshBtn">Refresh</span>
       </div>
-      <div style="margin-top:14px">
-        <label class="fl">Primary Position <span style="color:var(--mute);font-weight:500;text-transform:none;">— loads the grid</span></label>
-        <div class="chips" id="posChips"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- UNIVERSAL -->
-  <div class="card">
-    <div class="card-h"><span class="ico">★</span><h2>Every Player</h2></div>
-    <div class="card-b">
-      <label class="fl">Overall — the routing call</label>
-      <div class="seg" id="overall">
-        <button data-g="A"><span class="g">A</span><span class="t">Priority + report</span></button>
-        <button data-g="B"><span class="g">B</span><span class="t">Monitor + report</span></button>
-        <button data-g="C"><span class="g">C</span><span class="t">Database only</span></button>
-        <button data-g="D"><span class="g">D</span><span class="t">Pass</span></button>
-      </div>
-      <div style="margin-top:16px">
-        <label class="fl">Pressing / work-rate against ball <span style="color:var(--mute);font-weight:500;text-transform:none;">— graded on everyone (RB DNA)</span></label>
-        <div id="pressRow"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- POSITION GRID -->
-  <div class="card">
-    <div class="card-h"><span class="ico">▥</span><h2 id="gridTitle">Position Grid</h2></div>
-    <div class="card-b" id="gridBody">
-      <div class="empty-grid">Select a primary position above to load its grading grid.</div>
-    </div>
-  </div>
-
-  <!-- SUGGESTED GRADE -->
-  <div class="card" id="sugg" style="display:none">
-    <div class="card-h"><span class="ico">⚖</span><h2>Suggested Grade <span style="color:var(--mute);font-weight:500;text-transform:none;">— from the grid, your call overrides</span></h2></div>
-    <div class="card-b">
-      <div class="sugg-top">
-        <div class="sugg-letter" id="sLetter">–</div>
-        <div class="sugg-meta">
-          <div class="sugg-score" id="sScore"></div>
-          <div class="sugg-adj" id="sAdj"></div>
+      <div class="card-b">
+        <div class="actions-row">
+          <button class="btn-sec pdf" id="exportPdf">Export PDF</button>
         </div>
-        <button class="apply" id="applySugg">Apply to Overall</button>
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Search by name, club, position, event...">
+        </div>
+        <div class="saved-list" id="savedList">
+          <div class="loading">Loading reports...</div>
+        </div>
       </div>
-      <div class="sugg-flags" id="sFlags"></div>
-      <div class="sugg-mismatch" id="sMismatch"></div>
     </div>
   </div>
 
-  <!-- SPECIAL WEAPONS -->
-  <div class="card">
-    <div class="card-h"><span class="ico">✦</span><h2>Special Weapons</h2></div>
-    <div class="card-b">
-      <p class="hint" style="margin-top:0">Identifying traits — select any</p>
-      <div class="chips" id="weapons"></div>
-    </div>
-  </div>
-
-  <!-- OBSERVATIONS -->
-  <div class="card">
-    <div class="card-h"><span class="ico">✎</span><h2>Observations</h2></div>
-    <div class="card-b">
-      <div class="obs-head">
-        <label class="fl" style="margin:0">Shorthand notes</label>
-        <button class="mic" id="mic"><span class="dot"></span><span id="micTxt">Speak</span></button>
+  <!-- NEW REPORT VIEW -->
+  <div id="newView">
+    <!-- PLAYER INFO -->
+    <div class="card">
+      <div class="card-h"><span class="ico">●</span><h2>Player Info</h2></div>
+      <div class="card-b">
+        <div class="grid2">
+          <div><label class="fl">Player Name</label><input id="name" type="text" placeholder="e.g., Mamoudou Diakite"></div>
+          <div><label class="fl">Club</label><input id="club" type="text" placeholder="e.g., Penn Fusion"></div>
+          <div><label class="fl">Jersey #</label><input id="jersey" type="number" placeholder="#"></div>
+          <div><label class="fl">Year of Birth</label><input id="yob" type="number" placeholder="2012"></div>
+          <div><label class="fl">Foot</label>
+            <select id="foot"><option value="">Select…</option><option>Right</option><option>Left</option><option>Both</option></select></div>
+          <div><label class="fl">Physical profile</label>
+            <select id="phys"><option value="">Select…</option><option>Early developer</option><option>On age</option><option>Undersized / late developer</option></select></div>
+          <div><label class="fl">Event</label><input id="event" type="text" placeholder="e.g., ECNL Playoffs"></div>
+          <div><label class="fl">Date</label><input id="date" type="date"></div>
+        </div>
+        <div style="margin-top:14px">
+          <label class="fl">Primary Position</label>
+          <div class="chips" id="posChips"></div>
+        </div>
       </div>
-      <textarea id="notes" placeholder="Massy run, shot blocked. Scored using body to turn defender. Knows how to use the half-space…"></textarea>
-      <p class="hint" id="micHint"></p>
     </div>
-  </div>
 
-  <div id="out" class="card">
-    <div class="card-h"><span class="ico">▣</span><h2>Generated Entry</h2></div>
-    <div class="card-b">
-      <pre class="report" id="report"></pre>
-      <div class="export-btns">
-        <button class="copy" id="copy">Copy entry</button>
+    <!-- UNIVERSAL -->
+    <div class="card">
+      <div class="card-h"><span class="ico">★</span><h2>Every Player</h2></div>
+      <div class="card-b">
+        <label class="fl">Overall — the routing call</label>
+        <div class="seg" id="overall">
+          <button data-g="A"><span class="g">A</span><span class="t">Priority</span></button>
+          <button data-g="B"><span class="g">B</span><span class="t">Monitor</span></button>
+          <button data-g="C"><span class="g">C</span><span class="t">Database</span></button>
+          <button data-g="D"><span class="g">D</span><span class="t">Pass</span></button>
+        </div>
+        <div style="margin-top:16px">
+          <label class="fl">Pressing / work-rate (RB DNA)</label>
+          <div id="pressRow"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- POSITION GRID -->
+    <div class="card">
+      <div class="card-h"><span class="ico">▥</span><h2 id="gridTitle">Position Grid</h2></div>
+      <div class="card-b" id="gridBody">
+        <div class="empty-grid">Select a primary position above to load its grading grid.</div>
+      </div>
+    </div>
+
+    <!-- SUGGESTED GRADE -->
+    <div class="card" id="sugg" style="display:none">
+      <div class="card-h"><span class="ico">⚖</span><h2>Suggested Grade</h2></div>
+      <div class="card-b">
+        <div class="sugg-top">
+          <div class="sugg-letter" id="sLetter">–</div>
+          <div class="sugg-meta">
+            <div class="sugg-score" id="sScore"></div>
+            <div class="sugg-adj" id="sAdj"></div>
+          </div>
+          <button class="apply" id="applySugg">Apply</button>
+        </div>
+        <div class="sugg-flags" id="sFlags"></div>
+        <div class="sugg-mismatch" id="sMismatch"></div>
+      </div>
+    </div>
+
+    <!-- SPECIAL WEAPONS -->
+    <div class="card">
+      <div class="card-h"><span class="ico">✦</span><h2>Special Weapons</h2></div>
+      <div class="card-b">
+        <p class="hint" style="margin-top:0">Identifying traits — select any</p>
+        <div class="chips" id="weapons"></div>
+      </div>
+    </div>
+
+    <!-- OBSERVATIONS -->
+    <div class="card">
+      <div class="card-h"><span class="ico">✎</span><h2>Observations</h2></div>
+      <div class="card-b">
+        <div class="obs-head">
+          <label class="fl" style="margin:0">Shorthand notes</label>
+          <button class="mic" id="mic"><span class="dot"></span><span id="micTxt">Speak</span></button>
+        </div>
+        <textarea id="notes" placeholder="Aerial presence. Good 1v1 defending actions."></textarea>
+        <p class="hint" id="micHint"></p>
       </div>
     </div>
   </div>
@@ -256,7 +265,7 @@
 <div class="bar">
   <div class="bar-inner">
     <div class="route" id="route">Set an <b>Overall</b> grade to see routing.</div>
-    <button class="gen" id="gen">Generate</button>
+    <button class="gen" id="saveBtn">Save Report</button>
   </div>
 </div>
 
@@ -282,12 +291,42 @@ const WEIGHTS = {
   ST:{"Finishing":30,"Movement / runs":25,"Hold-up & link":20,"1v1 / dribble":15,"Aerial":10}
 };
 const WEAPONS = ["1v1 Attacker","1v1 Defender","Ball Carrier","Pressing","Finisher","Playmaker","Aerial","Engine","Game Reader","Press Resistant","Physical","Speed"];
+const ROUTES={
+  A:{label:"Priority — full report + shadow-team", cls:"A"},
+  B:{label:"Monitor list — write full report", cls:"B"},
+  C:{label:"Database only — log the row", cls:"C"},
+  D:{label:"Pass — no further action", cls:"D"}
+};
 
 const state = {pos:null, overall:null, press:0, grid:{}, weapons:new Set(), suggest:null};
 let currentReportId = null;
-let savedReports = JSON.parse(localStorage.getItem('scoutReports') || '[]');
+let allReports = [];
 
-// build position chips
+// Status toast
+function showStatus(msg, type='ok') {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'status show ' + type;
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// Tabs
+const tabNew = document.getElementById('tabNew');
+const tabSaved = document.getElementById('tabSaved');
+const newView = document.getElementById('newView');
+const savedView = document.getElementById('savedView');
+
+tabNew.onclick = () => {
+  tabNew.classList.add('on'); tabSaved.classList.remove('on');
+  newView.style.display = 'block'; savedView.style.display = 'none';
+};
+tabSaved.onclick = () => {
+  tabSaved.classList.add('on'); tabNew.classList.remove('on');
+  savedView.style.display = 'block'; newView.style.display = 'none';
+  loadReports();
+};
+
+// Build position chips
 const posWrap = document.getElementById("posChips");
 POSITIONS.forEach(p=>{
   const c=document.createElement("div"); c.className="chip"; c.textContent=p;
@@ -296,7 +335,7 @@ POSITIONS.forEach(p=>{
   posWrap.appendChild(c);
 });
 
-// build weapon chips
+// Build weapon chips
 const wWrap=document.getElementById("weapons");
 WEAPONS.forEach(w=>{
   const c=document.createElement("div"); c.className="chip"; c.textContent=w;
@@ -304,7 +343,7 @@ WEAPONS.forEach(w=>{
   wWrap.appendChild(c);
 });
 
-// star widget builder
+// Star widget builder
 function starRow(name, getVal, setVal){
   const row=document.createElement("div"); row.className="srow";
   const nm=document.createElement("div"); nm.className="nm"; nm.textContent=name;
@@ -318,12 +357,12 @@ function starRow(name, getVal, setVal){
   paint(); row.appendChild(nm); row.appendChild(stars); return row;
 }
 
-// pressing (universal)
+// Pressing
 document.getElementById("pressRow").appendChild(
   starRow("Pressing intensity", ()=>state.press, v=>state.press=v)
 );
 
-// overall segmented
+// Overall segmented
 document.querySelectorAll("#overall button").forEach(b=>{
   b.onclick=()=>{ document.querySelectorAll("#overall button").forEach(x=>x.classList.remove("on"));
     b.classList.add("on"); state.overall=b.dataset.g; updateRoute(); recompute(); };
@@ -338,59 +377,47 @@ function renderGrid(key){
   recompute();
 }
 
-const ROUTES={
-  A:{label:"Priority — full report + shadow-team candidate", cls:"A"},
-  B:{label:"Monitor list — write full report", cls:"B"},
-  C:{label:"Database only — log the row, no report", cls:"C"},
-  D:{label:"Pass — no further action", cls:"D"}
-};
 function updateRoute(){
   const r=document.getElementById("route");
   if(!state.overall){ r.innerHTML="Set an <b>Overall</b> grade to see routing."; return; }
   const o=ROUTES[state.overall];
-  r.innerHTML=`Routing<span class="pill ${o.cls}">${state.overall}</span> <b>${o.label}</b>`;
+  r.innerHTML=`<span class="pill ${o.cls}">${state.overall}</span> ${o.label}`;
 }
 
-// ---- auto-grade engine ----
 function recompute(){
   const card=document.getElementById("sugg");
   if(!state.pos){ card.style.display="none"; return; }
   const key=POS_TO_GRID[state.pos], w=WEIGHTS[key], attrs=GRIDS[key].attrs;
-
-  const rated   = attrs.filter(a=>state.grid[a]>0);
+  const rated = attrs.filter(a=>state.grid[a]>0);
   const notSeen = attrs.filter(a=>state.grid[a]===0);
   if(rated.length===0){ card.style.display="none"; return; }
 
   let sum=0,wsum=0; rated.forEach(a=>{ sum+=state.grid[a]*w[a]; wsum+=w[a]; });
   const base=sum/wsum;
   const top2=[...rated].sort((a,b)=>w[b]-w[a]).slice(0,2);
-
   let wb=0; if(top2.some(a=>state.grid[a]===5)) wb=0.3; else if(rated.some(a=>state.grid[a]===5)) wb=0.15;
   let hp=0; if(top2.some(a=>state.grid[a]===1)) hp=0.4; else if(rated.some(a=>state.grid[a]===1)) hp=0.3;
   let pa=state.press>0 ? (state.press-3)*0.1 : 0;
   const score=Math.max(0,Math.min(5, base+wb-hp+pa));
   let letter = score>=3.8?"A" : score>=2.8?"B" : score>=2.0?"C" : "D";
-
   const thin = rated.length<2;
   if(thin && letter==="A") letter="B";
   state.suggest={letter,score,base,observed:rated.length,total:attrs.length};
 
   card.style.display="block";
   const L=document.getElementById("sLetter"); L.textContent=thin?"?":letter; L.className="sugg-letter "+(thin?"":letter);
-  document.getElementById("sScore").textContent="Weighted "+base.toFixed(1)+"  ·  adjusted "+score.toFixed(1)+" / 5  ·  "+rated.length+"/"+attrs.length+" seen";
-  const bits=[]; if(wb)bits.push("+"+wb.toFixed(2)+" elite weapon"); if(hp)bits.push("−"+hp.toFixed(2)+" concern"); if(pa)bits.push((pa>0?"+":"−")+Math.abs(pa).toFixed(2)+" pressing");
-  document.getElementById("sAdj").textContent = bits.length?bits.join("    "):"no modifiers applied";
+  document.getElementById("sScore").textContent="Weighted "+base.toFixed(1)+" · adjusted "+score.toFixed(1)+"/5 · "+rated.length+"/"+attrs.length+" seen";
+  const bits=[]; if(wb)bits.push("+"+wb.toFixed(2)+" elite"); if(hp)bits.push("−"+hp.toFixed(2)+" concern"); if(pa)bits.push((pa>0?"+":"−")+Math.abs(pa).toFixed(2)+" pressing");
+  document.getElementById("sAdj").textContent = bits.length?bits.join("  "):"no modifiers";
 
   const flags=document.getElementById("sFlags"); flags.innerHTML="";
   rated.forEach(a=>{ if(state.grid[a]===5){const t=document.createElement("span");t.className="tag up";t.textContent="Elite · "+a;flags.appendChild(t);} });
   rated.forEach(a=>{ if(state.grid[a]===1){const t=document.createElement("span");t.className="tag dn";t.textContent="Concern · "+a;flags.appendChild(t);} });
-  notSeen.forEach(a=>{ const t=document.createElement("span");t.className="tag na";t.textContent="Not seen · "+a;flags.appendChild(t); });
 
   const notes=[];
-  if(thin) notes.push("Thin sample — only "+rated.length+" attribute"+(rated.length===1?"":"s")+" observed. Provisional grade; A is held back until you've seen more.");
-  else if(notSeen.length) notes.push("Graded on "+rated.length+" of "+attrs.length+" — blanks are excluded, not counted against him.");
-  if(state.overall && state.overall!==letter) notes.push("You graded "+state.overall+"; the grid maths to "+letter+". Trust your eyes — the engine only sees stars.");
-  document.getElementById("sMismatch").innerHTML = notes.join("<br>");
+  if(thin) notes.push("Thin sample — provisional grade.");
+  if(state.overall && state.overall!==letter) notes.push("You graded "+state.overall+"; grid says "+letter+".");
+  document.getElementById("sMismatch").innerHTML = notes.join(" ");
 }
 
 document.getElementById("applySugg").onclick=()=>{
@@ -400,30 +427,40 @@ document.getElementById("applySugg").onclick=()=>{
   state.overall=g; updateRoute(); recompute();
 };
 
-// voice dictation
+// Voice
 const mic=document.getElementById("mic"), micTxt=document.getElementById("micTxt"),
       micHint=document.getElementById("micHint"), notes=document.getElementById("notes");
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 let rec=null, listening=false;
-if(!SR){ micHint.textContent="Voice needs Chrome or Safari — typing works everywhere."; }
+if(!SR){ micHint.textContent="Voice needs Chrome or Safari."; }
 mic.onclick=()=>{
   if(!SR){ notes.focus(); return; }
   if(listening){ rec.stop(); return; }
   rec=new SR(); rec.lang="en-US"; rec.interimResults=true; rec.continuous=true;
   let base=notes.value;
-  rec.onstart=()=>{ listening=true; mic.classList.add("live"); micTxt.textContent="Listening… tap to stop"; micHint.textContent=""; };
-  rec.onerror=(e)=>{ micHint.textContent = e.error==="not-allowed"
-      ? "Mic blocked — allow microphone access (works on your own deploy)." : "Voice error: "+e.error; };
+  rec.onstart=()=>{ listening=true; mic.classList.add("live"); micTxt.textContent="Stop"; };
+  rec.onerror=()=>{ listening=false; mic.classList.remove("live"); micTxt.textContent="Speak"; };
   rec.onend=()=>{ listening=false; mic.classList.remove("live"); micTxt.textContent="Speak"; };
   rec.onresult=(e)=>{ let t=""; for(let i=0;i<e.results.length;i++) t+=e.results[i][0].transcript;
     notes.value=(base?base+" ":"")+t; };
-  try{ rec.start(); }catch(err){ micHint.textContent="Could not start mic in this frame — try your deployed page."; }
+  try{ rec.start(); }catch(err){}
 };
 
-// star string
-const ss=n=>"★".repeat(n)+"☆".repeat(5-n);
+// ---- API FUNCTIONS ----
+async function loadReports() {
+  const list = document.getElementById('savedList');
+  list.innerHTML = '<div class="loading">Loading...</div>';
+  try {
+    const res = await fetch('/api/reports');
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+    allReports = data.reports || [];
+    renderSavedList();
+  } catch(e) {
+    list.innerHTML = '<div class="empty-saved">Error loading reports: '+e.message+'</div>';
+  }
+}
 
-// ---- SAVE/LOAD SYSTEM ----
 function getFormData(){
   return {
     name: document.getElementById("name").value,
@@ -433,60 +470,98 @@ function getFormData(){
     foot: document.getElementById("foot").value,
     phys: document.getElementById("phys").value,
     event: document.getElementById("event").value,
-    date: document.getElementById("date").value,
+    date: document.getElementById("date").value || null,
     pos: state.pos,
     overall: state.overall,
     press: state.press,
-    grid: {...state.grid},
+    grid: state.grid,
     weapons: [...state.weapons],
     notes: document.getElementById("notes").value
   };
 }
 
-function setFormData(data){
-  document.getElementById("name").value = data.name || '';
-  document.getElementById("club").value = data.club || '';
-  document.getElementById("jersey").value = data.jersey || '';
-  document.getElementById("yob").value = data.yob || '';
-  document.getElementById("foot").value = data.foot || '';
-  document.getElementById("phys").value = data.phys || '';
-  document.getElementById("event").value = data.event || '';
-  document.getElementById("date").value = data.date || '';
-  document.getElementById("notes").value = data.notes || '';
+async function saveReport() {
+  const data = getFormData();
+  if(!data.name.trim()){ showStatus("Enter a player name", "err"); return; }
 
-  // Position
-  state.pos = data.pos;
-  document.querySelectorAll("#posChips .chip").forEach(c => {
-    c.classList.toggle("on", c.textContent === data.pos);
-  });
-  if(data.pos) renderGrid(POS_TO_GRID[data.pos]);
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true; btn.textContent = 'Saving...';
 
-  // Overall
-  state.overall = data.overall;
-  document.querySelectorAll("#overall button").forEach(b => {
-    b.classList.toggle("on", b.dataset.g === data.overall);
-  });
+  try {
+    let res;
+    if(currentReportId) {
+      res = await fetch('/api/update?id=' + currentReportId, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+      });
+    } else {
+      res = await fetch('/api/save', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+      });
+    }
+    const result = await res.json();
+    if(result.error) throw new Error(result.error);
+
+    if(result.report && result.report[0]) {
+      currentReportId = result.report[0].id;
+    }
+    showStatus(currentReportId ? "Report updated!" : "Report saved!");
+    clearForm();
+  } catch(e) {
+    showStatus("Save failed: " + e.message, "err");
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save Report';
+  }
+}
+
+async function deleteReport(id) {
+  if(!confirm("Delete this report?")) return;
+  try {
+    const res = await fetch('/api/delete?id=' + id, {method: 'DELETE'});
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+    showStatus("Report deleted");
+    loadReports();
+  } catch(e) {
+    showStatus("Delete failed: " + e.message, "err");
+  }
+}
+
+function loadReportIntoForm(r) {
+  currentReportId = r.id;
+  document.getElementById("name").value = r.name || '';
+  document.getElementById("club").value = r.club || '';
+  document.getElementById("jersey").value = r.jersey || '';
+  document.getElementById("yob").value = r.yob || '';
+  document.getElementById("foot").value = r.foot || '';
+  document.getElementById("phys").value = r.phys || '';
+  document.getElementById("event").value = r.event || '';
+  document.getElementById("date").value = r.date || '';
+  document.getElementById("notes").value = r.notes || '';
+
+  state.pos = r.pos;
+  document.querySelectorAll("#posChips .chip").forEach(c => c.classList.toggle("on", c.textContent === r.pos));
+  if(r.pos) renderGridWithValues(POS_TO_GRID[r.pos], typeof r.grid === 'string' ? JSON.parse(r.grid) : r.grid);
+
+  state.overall = r.overall;
+  document.querySelectorAll("#overall button").forEach(b => b.classList.toggle("on", b.dataset.g === r.overall));
   updateRoute();
 
-  // Press - rebuild stars
-  state.press = data.press || 0;
+  state.press = r.press || 0;
   const pressRow = document.getElementById("pressRow");
   pressRow.innerHTML = '';
   pressRow.appendChild(starRow("Pressing intensity", ()=>state.press, v=>state.press=v));
 
-  // Grid values
-  if(data.grid && data.pos){
-    Object.entries(data.grid).forEach(([k,v]) => state.grid[k] = v);
-    renderGridWithValues(POS_TO_GRID[data.pos], data.grid);
-  }
-
-  // Weapons
-  state.weapons = new Set(data.weapons || []);
-  document.querySelectorAll("#weapons .chip").forEach(c => {
-    c.classList.toggle("on", state.weapons.has(c.textContent));
-  });
+  const weapons = typeof r.weapons === 'string' ? JSON.parse(r.weapons) : (r.weapons || []);
+  state.weapons = new Set(weapons);
+  document.querySelectorAll("#weapons .chip").forEach(c => c.classList.toggle("on", state.weapons.has(c.textContent)));
 
   recompute();
+  tabNew.click();
+  showStatus("Report loaded for editing");
 }
 
 function renderGridWithValues(key, values){
@@ -494,7 +569,7 @@ function renderGridWithValues(key, values){
   document.getElementById("gridTitle").textContent = g.title + " — grid";
   state.grid={}; body.innerHTML="";
   g.attrs.forEach(a=>{
-    state.grid[a] = values[a] || 0;
+    state.grid[a] = (values && values[a]) || 0;
     body.appendChild(starRow(a, ()=>state.grid[a], v=>state.grid[a]=v));
   });
   recompute();
@@ -511,72 +586,34 @@ function clearForm(){
   document.getElementById("event").value = '';
   document.getElementById("date").value = '';
   document.getElementById("notes").value = '';
-  state.pos = null;
-  state.overall = null;
-  state.press = 0;
-  state.grid = {};
-  state.weapons = new Set();
-  document.querySelectorAll("#posChips .chip").forEach(c => c.classList.remove("on"));
-  document.querySelectorAll("#overall button").forEach(b => b.classList.remove("on"));
-  document.querySelectorAll("#weapons .chip").forEach(c => c.classList.remove("on"));
-  document.getElementById("gridBody").innerHTML = '<div class="empty-grid">Select a primary position above to load its grading grid.</div>';
+  state.pos = null; state.overall = null; state.press = 0; state.grid = {}; state.weapons = new Set();
+  document.querySelectorAll("#posChips .chip, #overall button, #weapons .chip").forEach(c => c.classList.remove("on"));
+  document.getElementById("gridBody").innerHTML = '<div class="empty-grid">Select a primary position above.</div>';
   document.getElementById("gridTitle").textContent = "Position Grid";
   const pressRow = document.getElementById("pressRow");
   pressRow.innerHTML = '';
   pressRow.appendChild(starRow("Pressing intensity", ()=>state.press, v=>state.press=v));
   document.getElementById("sugg").style.display = "none";
-  document.getElementById("out").style.display = "none";
   updateRoute();
-  renderSavedList();
-}
-
-function saveReport(){
-  const data = getFormData();
-  if(!data.name.trim()){ alert("Please enter a player name before saving."); return; }
-
-  const report = {
-    id: currentReportId || Date.now().toString(),
-    ...data,
-    savedAt: new Date().toISOString()
-  };
-
-  const idx = savedReports.findIndex(r => r.id === report.id);
-  if(idx >= 0) savedReports[idx] = report;
-  else savedReports.unshift(report);
-
-  currentReportId = report.id;
-  localStorage.setItem('scoutReports', JSON.stringify(savedReports));
-  renderSavedList();
-}
-
-function loadReport(id){
-  const report = savedReports.find(r => r.id === id);
-  if(!report) return;
-  currentReportId = id;
-  setFormData(report);
-  renderSavedList();
-}
-
-function deleteReport(id, e){
-  e.stopPropagation();
-  if(!confirm("Delete this report?")) return;
-  savedReports = savedReports.filter(r => r.id !== id);
-  localStorage.setItem('scoutReports', JSON.stringify(savedReports));
-  if(currentReportId === id) clearForm();
-  else renderSavedList();
 }
 
 function renderSavedList(){
   const list = document.getElementById("savedList");
-  document.getElementById("reportCount").textContent = savedReports.length ? `(${savedReports.length})` : '';
+  const search = document.getElementById("searchInput").value.toLowerCase();
+  document.getElementById("reportCount").textContent = allReports.length ? `(${allReports.length})` : '';
 
-  if(savedReports.length === 0){
-    list.innerHTML = '<div class="empty-saved">No saved reports yet. Fill in player info and click "Save Current".</div>';
+  const filtered = allReports.filter(r => {
+    const txt = [r.name, r.club, r.pos, r.event, r.overall].filter(Boolean).join(' ').toLowerCase();
+    return txt.includes(search);
+  });
+
+  if(filtered.length === 0){
+    list.innerHTML = '<div class="empty-saved">' + (search ? 'No matches found' : 'No reports yet') + '</div>';
     return;
   }
 
-  list.innerHTML = savedReports.map(r => `
-    <div class="saved-item ${r.id === currentReportId ? 'active' : ''}" data-id="${r.id}">
+  list.innerHTML = filtered.map(r => `
+    <div class="saved-item" data-id="${r.id}">
       <div class="info">
         <div class="name">${r.name || 'Unknown'}</div>
         <div class="meta">${[r.club, r.pos, r.event].filter(Boolean).join(' · ') || 'No details'}</div>
@@ -589,16 +626,19 @@ function renderSavedList(){
   list.querySelectorAll('.saved-item').forEach(item => {
     item.onclick = (e) => {
       if(e.target.classList.contains('del')) return;
-      loadReport(item.dataset.id);
+      const r = allReports.find(x => x.id == item.dataset.id);
+      if(r) loadReportIntoForm(r);
     };
   });
   list.querySelectorAll('.del').forEach(btn => {
-    btn.onclick = (e) => deleteReport(btn.dataset.id, e);
+    btn.onclick = (e) => { e.stopPropagation(); deleteReport(btn.dataset.id); };
   });
 }
 
-function exportAllReports(){
-  if(savedReports.length === 0){ alert("No reports to export."); return; }
+// PDF Export
+const ss=n=>"★".repeat(n)+"☆".repeat(5-n);
+document.getElementById("exportPdf").onclick = () => {
+  if(allReports.length === 0){ showStatus("No reports to export", "err"); return; }
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -606,7 +646,6 @@ function exportAllReports(){
   const lineHeight = 6;
   let y = 20;
 
-  // Title
   doc.setFontSize(18);
   doc.setFont(undefined, 'bold');
   doc.setTextColor(200, 16, 46);
@@ -615,115 +654,62 @@ function exportAllReports(){
   doc.setFontSize(10);
   doc.setTextColor(100);
   doc.setFont(undefined, 'normal');
-  doc.text(`Exported: ${new Date().toLocaleDateString()}  |  ${savedReports.length} player${savedReports.length===1?'':'s'}`, margin, y);
+  doc.text(`Exported: ${new Date().toLocaleDateString()} | ${allReports.length} players`, margin, y);
   y += 12;
 
-  savedReports.forEach((r, idx) => {
-    // Check if we need a new page
-    if(y > 260) { doc.addPage(); y = 20; }
-
-    // Player header
+  allReports.forEach((r) => {
+    if(y > 250) { doc.addPage(); y = 20; }
     doc.setFillColor(200, 16, 46);
     doc.rect(margin, y - 5, pageWidth - margin * 2, 10, 'F');
     doc.setTextColor(255);
     doc.setFontSize(12);
     doc.setFont(undefined, 'bold');
-    doc.text(`${r.name || 'Unknown'}  ${r.pos ? '— ' + r.pos : ''}  ${r.overall ? '[' + r.overall + ']' : ''}`, margin + 3, y + 2);
+    doc.text(`${r.name || 'Unknown'} ${r.pos ? '— ' + r.pos : ''} ${r.overall ? '[' + r.overall + ']' : ''}`, margin + 3, y + 2);
     y += 12;
 
     doc.setTextColor(50);
     doc.setFontSize(10);
     doc.setFont(undefined, 'normal');
 
-    // Details
-    const details = [r.club, r.yob, r.jersey ? '#' + r.jersey : '', r.foot].filter(Boolean).join('  ·  ');
+    const details = [r.club, r.yob, r.jersey ? '#' + r.jersey : '', r.foot].filter(Boolean).join(' · ');
     if(details) { doc.text(details, margin, y); y += lineHeight; }
-    if(r.phys) { doc.text('Build: ' + r.phys, margin, y); y += lineHeight; }
-    if(r.event || r.date) { doc.text([r.event, r.date].filter(Boolean).join(' · '), margin, y); y += lineHeight; }
 
-    // Grid scores
-    if(r.grid && Object.keys(r.grid).length > 0) {
-      y += 2;
-      doc.setFont(undefined, 'bold');
-      doc.text('Attributes:', margin, y);
-      doc.setFont(undefined, 'normal');
-      y += lineHeight;
-      Object.entries(r.grid).forEach(([attr, val]) => {
-        if(y > 275) { doc.addPage(); y = 20; }
-        const stars = val > 0 ? '★'.repeat(val) + '☆'.repeat(5 - val) : '— not observed';
+    const grid = typeof r.grid === 'string' ? JSON.parse(r.grid || '{}') : (r.grid || {});
+    if(Object.keys(grid).length > 0) {
+      Object.entries(grid).forEach(([attr, val]) => {
+        if(y > 270) { doc.addPage(); y = 20; }
+        const stars = val > 0 ? ss(val) : '—';
         doc.text(`  ${attr}: ${stars}`, margin, y);
         y += lineHeight - 1;
       });
     }
 
-    // Weapons
-    if(r.weapons && r.weapons.length > 0) {
-      y += 2;
-      doc.setFont(undefined, 'bold');
-      doc.text('Weapons: ', margin, y);
-      doc.setFont(undefined, 'normal');
-      doc.text(r.weapons.join(', '), margin + 18, y);
-      y += lineHeight;
-    }
-
-    // Notes
     if(r.notes) {
       y += 2;
-      doc.setFont(undefined, 'bold');
-      doc.text('Notes:', margin, y);
-      doc.setFont(undefined, 'normal');
-      y += lineHeight;
-      const lines = doc.splitTextToSize(r.notes, pageWidth - margin * 2);
+      const lines = doc.splitTextToSize('Notes: ' + r.notes, pageWidth - margin * 2);
       lines.forEach(line => {
-        if(y > 275) { doc.addPage(); y = 20; }
+        if(y > 270) { doc.addPage(); y = 20; }
         doc.text(line, margin, y);
         y += lineHeight - 1;
       });
     }
-
-    y += 10; // Space between players
+    y += 8;
   });
 
   doc.save(`scout-reports-${new Date().toISOString().split('T')[0]}.pdf`);
-}
-
-document.getElementById("newReport").onclick = clearForm;
-document.getElementById("saveReport").onclick = saveReport;
-document.getElementById("exportAll").onclick = exportAllReports;
-
-// generate entry
-document.getElementById("gen").onclick=()=>{
-  const v=id=>document.getElementById(id).value.trim();
-  const L=[];
-  const head=[v("club")||"—", v("yob")&&v("yob"), v("jersey")&&("#"+v("jersey"))].filter(Boolean).join(" · ");
-  L.push(head);
-  L.push((v("name")||"Unknown")+(state.pos?"  —  "+state.pos:"")+(v("foot")?" ("+v("foot")+")":""));
-  if(v("phys")) L.push("Build: "+v("phys"));
-  L.push("");
-  L.push("OVERALL: "+(state.overall||"—")+"   |   Pressing "+ss(state.press));
-  if(state.suggest) L.push("Grid suggestion: "+state.suggest.letter+"  ("+state.suggest.score.toFixed(1)+"/5, "+state.suggest.observed+"/"+state.suggest.total+" seen)");
-  if(state.pos){
-    L.push("— "+GRIDS[POS_TO_GRID[state.pos]].title+" —");
-    Object.entries(state.grid).forEach(([k,val])=> L.push("  "+k.padEnd(28," ")+" "+(val>0?ss(val):"—  not observed")));
-  }
-  if(state.weapons.size) { L.push(""); L.push("Weapons: "+[...state.weapons].join(", ")); }
-  if(v("notes")){ L.push(""); L.push("Notes: "+v("notes")); }
-  if(v("event")||v("date")){ L.push(""); L.push([v("event"),v("date")].filter(Boolean).join(" · ")); }
-  if(state.overall){ L.push(""); L.push("→ "+ROUTES[state.overall].label); }
-  document.getElementById("report").textContent=L.join("\n");
-  document.getElementById("out").style.display="block";
-  document.getElementById("out").scrollIntoView({behavior:"smooth",block:"start"});
+  showStatus("PDF exported");
 };
 
-document.getElementById("copy").onclick=()=>{
-  navigator.clipboard.writeText(document.getElementById("report").textContent).then(()=>{
-    const b=document.getElementById("copy"); b.textContent="Copied ✓"; b.classList.add("done");
-    setTimeout(()=>{b.textContent="Copy entry"; b.classList.remove("done");},1600);
-  });
-};
+// Event bindings
+document.getElementById("saveBtn").onclick = saveReport;
+document.getElementById("refreshBtn").onclick = loadReports;
+document.getElementById("searchInput").oninput = renderSavedList;
 
-// Init
-renderSavedList();
+// Set today's date
+document.getElementById("date").valueAsDate = new Date();
+
+// Initial load
+loadReports();
 </script>
 </body>
 </html>
