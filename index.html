@@ -131,6 +131,17 @@
   .status.show{opacity:1;}
   .status.ok{background:var(--ok);color:#fff;}
   .status.err{background:#e53935;color:#fff;}
+  .grid-section{margin-bottom:16px;}
+  .grid-section:last-child{margin-bottom:0;}
+  .grid-label{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--slate);margin-bottom:8px;padding:6px 10px;background:#f7f9fa;border-radius:8px;display:flex;align-items:center;gap:6px;}
+  .grid-label .dot{width:8px;height:8px;border-radius:50%;}
+  .grid-label .dot.with{background:var(--ok);}
+  .grid-label .dot.against{background:var(--red);}
+  .confidence{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;margin-left:8px;}
+  .confidence.full{background:rgba(11,132,87,.12);color:var(--ok);}
+  .confidence.good{background:rgba(11,132,87,.08);color:var(--ok);}
+  .confidence.partial{background:#fff3cd;color:#856404;}
+  .confidence.low{background:#f8d7da;color:#721c24;}
 </style>
 </head>
 <body>
@@ -272,24 +283,84 @@
 <script>
 const POSITIONS = ["GK","RB","CB","LB","CDM","CM","LW","RW","ST"];
 const GRIDS = {
-  GK:  {title:"Goalkeeper", attrs:["Shot-stopping","Distribution (feet)","Command of box","1v1 / sweeping"]},
-  FB:  {title:"Full-back",  attrs:["1v1 defending","Defending the wide area","Recovery speed","Attacking output"]},
-  CB:  {title:"Centre-back",attrs:["1v1 defending","Defending space in behind","Aerial duels","Distribution / ball-playing"]},
-  CDM: {title:"Holding mid (6)",attrs:["Ball-winning","Decision making","Range of passing","Line breaker / press resistance"]},
-  CM:  {title:"Central mid (8)",attrs:["Press resistance","Range of passing","Ball-winning","Final-third actions","Engine / box-to-box"]},
-  WING:{title:"Winger",     attrs:["1v1 dribbling","Agility / balance","Final ball / creation","Finishing"]},
-  ST:  {title:"Striker",    attrs:["Finishing","Movement / runs","Hold-up & link","1v1 / dribble","Aerial"]}
+  GK: {
+    title:"Goalkeeper",
+    withBall:["Distribution (feet)","Distribution (hands)","Playing out from back","Decision making"],
+    againstBall:["Shot-stopping","1v1 saving","Commanding box","Sweeping / covering"]
+  },
+  FB: {
+    title:"Full-back",
+    withBall:["Attacking runs","Crossing / final ball","Carrying ball","Combination play"],
+    againstBall:["1v1 defending","Defensive positioning","Recovery runs","Aerial duels"]
+  },
+  CB: {
+    title:"Centre-back",
+    withBall:["Ball-playing","Passing range","Carrying into midfield","Composure on ball"],
+    againstBall:["1v1 defending","Aerial duels","Covering / sliding","Defensive anticipation"]
+  },
+  CDM: {
+    title:"Holding mid (6)",
+    withBall:["Press resistance","Passing range","Ball progression","Receiving under pressure"],
+    againstBall:["Ball-winning","Defensive positioning","Tackling","Interceptions"]
+  },
+  CM: {
+    title:"Central mid (8)",
+    withBall:["Press resistance","Passing range","Final third entries","Dribbling / carrying"],
+    againstBall:["Ball-winning","Defensive work rate","Positioning","Pressing triggers"]
+  },
+  WING: {
+    title:"Winger",
+    withBall:["1v1 dribbling","Final ball / crossing","Finishing","Movement off ball"],
+    againstBall:["Defensive tracking","Pressing","Recovery runs","1v1 defending"]
+  },
+  ST: {
+    title:"Striker",
+    withBall:["Finishing","Movement / runs","Link-up play","1v1 / dribbling"],
+    againstBall:["Pressing from front","Hold-up defending","Aerial contests","Work rate"]
+  }
 };
 const POS_TO_GRID = {GK:"GK",RB:"FB",LB:"FB",CB:"CB",CDM:"CDM",CM:"CM",LW:"WING",RW:"WING",ST:"ST"};
+
+// Weights: 50% with ball, 50% against ball — pressing amplifies defensive
 const WEIGHTS = {
-  GK:{"Shot-stopping":35,"Distribution (feet)":25,"Command of box":25,"1v1 / sweeping":15},
-  FB:{"1v1 defending":30,"Defending the wide area":25,"Recovery speed":20,"Attacking output":25},
-  CB:{"1v1 defending":30,"Defending space in behind":25,"Aerial duels":25,"Distribution / ball-playing":20},
-  CDM:{"Ball-winning":30,"Decision making":25,"Range of passing":20,"Line breaker / press resistance":25},
-  CM:{"Press resistance":22,"Range of passing":23,"Ball-winning":20,"Final-third actions":20,"Engine / box-to-box":15},
-  WING:{"1v1 dribbling":32,"Agility / balance":18,"Final ball / creation":28,"Finishing":22},
-  ST:{"Finishing":30,"Movement / runs":25,"Hold-up & link":20,"1v1 / dribble":15,"Aerial":10}
+  GK:{
+    withBall:{"Distribution (feet)":15,"Distribution (hands)":10,"Playing out from back":15,"Decision making":10},
+    againstBall:{"Shot-stopping":20,"1v1 saving":12,"Commanding box":10,"Sweeping / covering":8}
+  },
+  FB:{
+    withBall:{"Attacking runs":12,"Crossing / final ball":13,"Carrying ball":12,"Combination play":13},
+    againstBall:{"1v1 defending":15,"Defensive positioning":13,"Recovery runs":12,"Aerial duels":10}
+  },
+  CB:{
+    withBall:{"Ball-playing":15,"Passing range":12,"Carrying into midfield":10,"Composure on ball":13},
+    againstBall:{"1v1 defending":15,"Aerial duels":13,"Covering / sliding":12,"Defensive anticipation":10}
+  },
+  CDM:{
+    withBall:{"Press resistance":15,"Passing range":12,"Ball progression":13,"Receiving under pressure":10},
+    againstBall:{"Ball-winning":15,"Defensive positioning":12,"Tackling":10,"Interceptions":13}
+  },
+  CM:{
+    withBall:{"Press resistance":13,"Passing range":12,"Final third entries":13,"Dribbling / carrying":12},
+    againstBall:{"Ball-winning":13,"Defensive work rate":12,"Positioning":12,"Pressing triggers":13}
+  },
+  WING:{
+    withBall:{"1v1 dribbling":15,"Final ball / crossing":13,"Finishing":12,"Movement off ball":10},
+    againstBall:{"Defensive tracking":13,"Pressing":15,"Recovery runs":10,"1v1 defending":12}
+  },
+  ST:{
+    withBall:{"Finishing":18,"Movement / runs":14,"Link-up play":10,"1v1 / dribbling":8},
+    againstBall:{"Pressing from front":18,"Hold-up defending":10,"Aerial contests":10,"Work rate":12}
+  }
 };
+
+// Which attrs are defensive (for pressing multiplier)
+const DEFENSIVE_ATTRS = new Set([
+  "Shot-stopping","1v1 saving","Commanding box","Sweeping / covering",
+  "1v1 defending","Defensive positioning","Recovery runs","Aerial duels",
+  "Covering / sliding","Defensive anticipation","Ball-winning","Tackling","Interceptions",
+  "Defensive work rate","Positioning","Pressing triggers","Defensive tracking","Pressing",
+  "Pressing from front","Hold-up defending","Aerial contests","Work rate"
+]);
 const WEAPONS = ["1v1 Attacker","1v1 Defender","Ball Carrier","Pressing","Finisher","Playmaker","Aerial","Engine","Game Reader","Press Resistant","Physical","Speed"];
 const ROUTES={
   A:{label:"Priority — full report + shadow-team", cls:"A"},
@@ -372,8 +443,33 @@ function renderGrid(key){
   const g=GRIDS[key]; const body=document.getElementById("gridBody");
   document.getElementById("gridTitle").textContent = g.title + " — grid";
   state.grid={}; body.innerHTML="";
-  g.attrs.forEach(a=>{ state.grid[a]=0;
-    body.appendChild(starRow(a, ()=>state.grid[a], v=>state.grid[a]=v)); });
+
+  // With Ball section
+  const withSection = document.createElement("div");
+  withSection.className = "grid-section";
+  const withLabel = document.createElement("div");
+  withLabel.className = "grid-label";
+  withLabel.innerHTML = '<span class="dot with"></span>With Ball';
+  withSection.appendChild(withLabel);
+  g.withBall.forEach(a=>{
+    state.grid[a]=0;
+    withSection.appendChild(starRow(a, ()=>state.grid[a], v=>state.grid[a]=v));
+  });
+  body.appendChild(withSection);
+
+  // Against Ball section
+  const againstSection = document.createElement("div");
+  againstSection.className = "grid-section";
+  const againstLabel = document.createElement("div");
+  againstLabel.className = "grid-label";
+  againstLabel.innerHTML = '<span class="dot against"></span>Against Ball';
+  againstSection.appendChild(againstLabel);
+  g.againstBall.forEach(a=>{
+    state.grid[a]=0;
+    againstSection.appendChild(starRow(a, ()=>state.grid[a], v=>state.grid[a]=v));
+  });
+  body.appendChild(againstSection);
+
   recompute();
 }
 
@@ -387,35 +483,101 @@ function updateRoute(){
 function recompute(){
   const card=document.getElementById("sugg");
   if(!state.pos){ card.style.display="none"; return; }
-  const key=POS_TO_GRID[state.pos], w=WEIGHTS[key], attrs=GRIDS[key].attrs;
-  const rated = attrs.filter(a=>state.grid[a]>0);
-  const notSeen = attrs.filter(a=>state.grid[a]===0);
+  const key=POS_TO_GRID[state.pos];
+  const w=WEIGHTS[key];
+  const g=GRIDS[key];
+  const allAttrs = [...g.withBall, ...g.againstBall];
+  const totalAttrs = allAttrs.length; // 8
+  const rated = allAttrs.filter(a=>state.grid[a]>0);
   if(rated.length===0){ card.style.display="none"; return; }
 
-  let sum=0,wsum=0; rated.forEach(a=>{ sum+=state.grid[a]*w[a]; wsum+=w[a]; });
-  const base=sum/wsum;
-  const top2=[...rated].sort((a,b)=>w[b]-w[a]).slice(0,2);
+  // Merge weights for calculation
+  const allWeights = {...w.withBall, ...w.againstBall};
+
+  // Calculate pressing multiplier for defensive attrs (RB DNA)
+  let pressMultiplier = 1.0;
+  if(state.press >= 4) pressMultiplier = 1.15; // +15% to defensive weights
+  if(state.press === 5) pressMultiplier = 1.25; // +25% elite presser
+
+  // Calculate weighted score with pressing boost on defensive attrs
+  let sum=0, wsum=0;
+  rated.forEach(a=>{
+    let weight = allWeights[a];
+    if(DEFENSIVE_ATTRS.has(a) && state.press > 0) {
+      weight *= pressMultiplier;
+    }
+    sum += state.grid[a] * weight;
+    wsum += weight;
+  });
+  const base = sum/wsum;
+
+  // Elite/concern modifiers
+  const top2 = [...rated].sort((a,b)=>allWeights[b]-allWeights[a]).slice(0,2);
   let wb=0; if(top2.some(a=>state.grid[a]===5)) wb=0.3; else if(rated.some(a=>state.grid[a]===5)) wb=0.15;
   let hp=0; if(top2.some(a=>state.grid[a]===1)) hp=0.4; else if(rated.some(a=>state.grid[a]===1)) hp=0.3;
-  let pa=state.press>0 ? (state.press-3)*0.1 : 0;
-  const score=Math.max(0,Math.min(5, base+wb-hp+pa));
+
+  // Low pressing penalty (can't be A without pressing for RB)
+  let pressPenalty = 0;
+  let letterCap = null;
+  if(state.press <= 2 && state.press > 0) {
+    pressPenalty = 0.2;
+    letterCap = "B"; // Can't be A without pressing
+  }
+
+  const score = Math.max(0, Math.min(5, base + wb - hp - pressPenalty));
   let letter = score>=3.8?"A" : score>=2.8?"B" : score>=2.0?"C" : "D";
-  const thin = rated.length<2;
+
+  // Apply caps
+  const thin = rated.length < 3;
   if(thin && letter==="A") letter="B";
-  state.suggest={letter,score,base,observed:rated.length,total:attrs.length};
+  if(letterCap && letter==="A") letter = letterCap;
+
+  // Confidence level based on observations
+  let confidence, confidenceClass;
+  if(rated.length >= 7) { confidence = "Full picture"; confidenceClass = "full"; }
+  else if(rated.length >= 5) { confidence = "Good sample"; confidenceClass = "good"; }
+  else if(rated.length >= 3) { confidence = "Partial view"; confidenceClass = "partial"; }
+  else { confidence = "Limited data"; confidenceClass = "low"; }
+
+  state.suggest={letter,score,base,observed:rated.length,total:totalAttrs,confidence,confidenceClass};
 
   card.style.display="block";
-  const L=document.getElementById("sLetter"); L.textContent=thin?"?":letter; L.className="sugg-letter "+(thin?"":letter);
-  document.getElementById("sScore").textContent="Weighted "+base.toFixed(1)+" · adjusted "+score.toFixed(1)+"/5 · "+rated.length+"/"+attrs.length+" seen";
-  const bits=[]; if(wb)bits.push("+"+wb.toFixed(2)+" elite"); if(hp)bits.push("−"+hp.toFixed(2)+" concern"); if(pa)bits.push((pa>0?"+":"−")+Math.abs(pa).toFixed(2)+" pressing");
-  document.getElementById("sAdj").textContent = bits.length?bits.join("  "):"no modifiers";
+  const L=document.getElementById("sLetter");
+  L.textContent = thin ? "?" : letter;
+  L.className = "sugg-letter " + (thin ? "" : letter);
+
+  document.getElementById("sScore").innerHTML =
+    `Weighted ${base.toFixed(1)} · adjusted ${score.toFixed(1)}/5 · ${rated.length}/${totalAttrs} seen` +
+    `<span class="confidence ${confidenceClass}">${confidence}</span>`;
+
+  const bits=[];
+  if(wb) bits.push("+"+wb.toFixed(2)+" elite");
+  if(hp) bits.push("−"+hp.toFixed(2)+" concern");
+  if(pressMultiplier > 1) bits.push("+"+(((pressMultiplier-1)*100).toFixed(0))+"% press boost");
+  if(pressPenalty) bits.push("−"+pressPenalty.toFixed(2)+" low press");
+  document.getElementById("sAdj").textContent = bits.length ? bits.join("  ") : "no modifiers";
 
   const flags=document.getElementById("sFlags"); flags.innerHTML="";
-  rated.forEach(a=>{ if(state.grid[a]===5){const t=document.createElement("span");t.className="tag up";t.textContent="Elite · "+a;flags.appendChild(t);} });
-  rated.forEach(a=>{ if(state.grid[a]===1){const t=document.createElement("span");t.className="tag dn";t.textContent="Concern · "+a;flags.appendChild(t);} });
+  rated.forEach(a=>{
+    if(state.grid[a]===5){
+      const t=document.createElement("span");
+      t.className="tag up";
+      t.textContent="Elite · "+a;
+      flags.appendChild(t);
+    }
+  });
+  rated.forEach(a=>{
+    if(state.grid[a]===1){
+      const t=document.createElement("span");
+      t.className="tag dn";
+      t.textContent="Concern · "+a;
+      flags.appendChild(t);
+    }
+  });
 
   const notes=[];
   if(thin) notes.push("Thin sample — provisional grade.");
+  if(letterCap) notes.push("Low pressing caps grade at "+letterCap+" (RB DNA).");
   if(state.overall && state.overall!==letter) notes.push("You graded "+state.overall+"; grid says "+letter+".");
   document.getElementById("sMismatch").innerHTML = notes.join(" ");
 }
@@ -482,7 +644,7 @@ function getFormData(){
 
 async function saveReport() {
   const data = getFormData();
-  if(!data.name.trim()){ showStatus("Enter a player name", "err"); return; }
+  // No mandatory fields - live scouting has too many unknowns
 
   const btn = document.getElementById('saveBtn');
   btn.disabled = true; btn.textContent = 'Saving...';
@@ -568,10 +730,33 @@ function renderGridWithValues(key, values){
   const g=GRIDS[key]; const body=document.getElementById("gridBody");
   document.getElementById("gridTitle").textContent = g.title + " — grid";
   state.grid={}; body.innerHTML="";
-  g.attrs.forEach(a=>{
+
+  // With Ball section
+  const withSection = document.createElement("div");
+  withSection.className = "grid-section";
+  const withLabel = document.createElement("div");
+  withLabel.className = "grid-label";
+  withLabel.innerHTML = '<span class="dot with"></span>With Ball';
+  withSection.appendChild(withLabel);
+  g.withBall.forEach(a=>{
     state.grid[a] = (values && values[a]) || 0;
-    body.appendChild(starRow(a, ()=>state.grid[a], v=>state.grid[a]=v));
+    withSection.appendChild(starRow(a, ()=>state.grid[a], v=>state.grid[a]=v));
   });
+  body.appendChild(withSection);
+
+  // Against Ball section
+  const againstSection = document.createElement("div");
+  againstSection.className = "grid-section";
+  const againstLabel = document.createElement("div");
+  againstLabel.className = "grid-label";
+  againstLabel.innerHTML = '<span class="dot against"></span>Against Ball';
+  againstSection.appendChild(againstLabel);
+  g.againstBall.forEach(a=>{
+    state.grid[a] = (values && values[a]) || 0;
+    againstSection.appendChild(starRow(a, ()=>state.grid[a], v=>state.grid[a]=v));
+  });
+  body.appendChild(againstSection);
+
   recompute();
 }
 
