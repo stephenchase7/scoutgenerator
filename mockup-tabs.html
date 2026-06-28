@@ -2,418 +2,748 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Multi-Player Tabs Mockup</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Scout Capture – Multi-Player</title>
 <style>
   :root{
     --red:#c8102e; --red-dk:#9e0c24; --ink:#1f2933; --slate:#52606d;
     --mute:#9aa5b1; --line:#e4e7eb; --bg:#eef1f4; --card:#ffffff;
-    --gold:#f5b301; --ok:#0b8457; --radius:14px;
+    --gold:#f5b301; --gold-off:#d2d6dc; --ok:#0b8457; --radius:14px;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding-bottom:80px;}
+  body{background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;}
+
+  /* Header */
+  .header{
+    background:#fff;border-bottom:1px solid var(--line);
+    padding:12px 16px;display:flex;align-items:center;gap:10px;
+  }
+  .crest{width:32px;height:32px;border-radius:8px;background:var(--red);color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;}
+  .header h1{font-size:17px;letter-spacing:-.02em;}
+  .header span{font-size:11px;color:var(--mute);display:block;margin-top:1px;}
 
   /* Player tabs bar */
   .tabs-bar{
     position:sticky;top:0;z-index:100;
     background:#fff;border-bottom:1px solid var(--line);
-    padding:8px 12px;display:flex;gap:8px;overflow-x:auto;
+    padding:10px 12px;display:flex;gap:8px;overflow-x:auto;
     -webkit-overflow-scrolling:touch;
   }
   .tabs-bar::-webkit-scrollbar{display:none;}
 
   .player-tab{
     flex-shrink:0;display:flex;align-items:center;gap:8px;
-    padding:10px 14px;border-radius:10px;background:var(--bg);
+    padding:10px 12px;border-radius:10px;background:var(--bg);
     border:2px solid transparent;cursor:pointer;transition:.15s;
+    position:relative;
   }
   .player-tab:hover{border-color:var(--mute);}
   .player-tab.active{background:#fff;border-color:var(--red);box-shadow:0 2px 8px rgba(0,0,0,.08);}
   .player-tab .jersey{
-    width:32px;height:32px;border-radius:8px;background:var(--slate);
-    color:#fff;font-weight:800;font-size:14px;
+    width:30px;height:30px;border-radius:8px;background:var(--slate);
+    color:#fff;font-weight:800;font-size:13px;
     display:flex;align-items:center;justify-content:center;
   }
   .player-tab.active .jersey{background:var(--red);}
   .player-tab .info{text-align:left;}
-  .player-tab .pos{font-size:11px;color:var(--mute);font-weight:600;}
-  .player-tab .name{font-size:13px;font-weight:600;color:var(--ink);max-width:80px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .player-tab .badge{
-    width:8px;height:8px;border-radius:50%;background:var(--gold);
-    margin-left:4px;
-  }
+  .player-tab .pos{font-size:10px;color:var(--mute);font-weight:600;}
+  .player-tab .name{font-size:12px;font-weight:600;color:var(--ink);max-width:70px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .player-tab .badge{width:8px;height:8px;border-radius:50%;background:var(--gold);}
   .player-tab .badge.empty{background:var(--line);}
+  .player-tab .badge.saved{background:var(--ok);}
+
+  .player-tab .del-btn{
+    position:absolute;top:-6px;right:-6px;
+    width:20px;height:20px;border-radius:50%;
+    background:#e53935;color:#fff;border:2px solid #fff;
+    font-size:12px;font-weight:700;cursor:pointer;
+    display:none;align-items:center;justify-content:center;
+    box-shadow:0 2px 4px rgba(0,0,0,.2);
+  }
+  .player-tab:hover .del-btn,.player-tab.active .del-btn{display:flex;}
 
   .add-tab{
-    flex-shrink:0;width:44px;height:52px;border-radius:10px;
+    flex-shrink:0;width:44px;height:50px;border-radius:10px;
     border:2px dashed var(--line);background:transparent;
-    font-size:24px;color:var(--mute);cursor:pointer;
+    font-size:22px;color:var(--mute);cursor:pointer;
     display:flex;align-items:center;justify-content:center;
   }
   .add-tab:hover{border-color:var(--red);color:var(--red);}
 
+  /* Main content area */
+  .main{padding:14px 14px 160px;max-width:700px;margin:0 auto;}
+
   /* Player card content */
-  .player-card{display:none;padding:16px;max-width:600px;margin:0 auto;}
+  .player-card{display:none;}
   .player-card.active{display:block;}
 
+  /* Cards */
   .card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;}
   .card-h{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line);}
   .card-h .ico{color:var(--red);font-size:14px;}
   .card-h h2{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--slate);}
   .card-b{padding:14px;}
 
-  .row{display:flex;gap:10px;margin-bottom:10px;}
-  .row:last-child{margin-bottom:0;}
-  .field{flex:1;}
-  .field label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--slate);margin-bottom:4px;letter-spacing:.04em;}
-  .field input,.field select{
-    width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;
-    font-size:15px;font-family:inherit;
+  /* Form fields */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media(max-width:500px){.grid2{grid-template-columns:1fr;}}
+  .field{margin-bottom:12px;}
+  .field:last-child{margin-bottom:0;}
+  .field label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--slate);margin-bottom:5px;letter-spacing:.04em;}
+  .field input,.field select,.field textarea{
+    width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;
+    font-size:15px;font-family:inherit;background:#fff;color:var(--ink);
   }
-  .field input:focus,.field select:focus{outline:none;border-color:var(--red);}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(200,16,46,.1);}
+  .field textarea{resize:vertical;min-height:90px;line-height:1.4;}
 
-  /* Quick position chips */
-  .pos-chips{display:flex;flex-wrap:wrap;gap:6px;}
-  .pos-chip{
-    padding:8px 12px;border-radius:8px;background:var(--bg);
-    font-size:13px;font-weight:600;color:var(--slate);cursor:pointer;
-    border:1px solid var(--line);
+  /* Position chips */
+  .chips{display:flex;flex-wrap:wrap;gap:7px;}
+  .chip{
+    padding:9px 14px;border-radius:999px;background:#fff;
+    font-size:14px;font-weight:600;color:var(--slate);cursor:pointer;
+    border:1px solid var(--line);transition:.12s;
   }
-  .pos-chip:hover{border-color:var(--mute);}
-  .pos-chip.on{background:var(--red);color:#fff;border-color:var(--red);}
+  .chip:hover{border-color:var(--mute);}
+  .chip.on{background:var(--red);color:#fff;border-color:var(--red);}
 
-  /* Quick rating row */
-  .quick-rate{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f5f5f5;}
-  .quick-rate:last-child{border-bottom:none;}
-  .quick-rate .attr{font-size:13px;font-weight:500;color:var(--ink);}
-  .quick-rate .stars{display:flex;gap:2px;}
-  .quick-rate .star{font-size:20px;color:var(--line);cursor:pointer;}
-  .quick-rate .star.lit{color:var(--gold);}
-  .quick-rate .star:hover{transform:scale(1.1);}
+  /* Segmented control */
+  .seg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+  .seg button{padding:12px 4px;border:1.5px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;font-family:inherit;text-align:center;transition:.12s;}
+  .seg button .g{font-size:18px;font-weight:800;display:block;color:var(--ink);}
+  .seg button .t{font-size:10px;color:var(--mute);font-weight:600;margin-top:2px;display:block;}
+  .seg button.on{border-color:var(--red);background:rgba(200,16,46,.06);}
+  .seg button.on .g{color:var(--red);}
 
-  /* Notes */
-  textarea{
-    width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;
-    font-size:14px;font-family:inherit;resize:vertical;min-height:70px;
-  }
-  textarea:focus{outline:none;border-color:var(--red);}
+  /* Grid sections */
+  .grid-section{margin-bottom:14px;}
+  .grid-section:last-child{margin-bottom:0;}
+  .grid-label{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--slate);margin-bottom:8px;padding:6px 10px;background:#f7f9fa;border-radius:8px;display:flex;align-items:center;gap:6px;}
+  .grid-label .dot{width:8px;height:8px;border-radius:50%;}
+  .grid-label .dot.with{background:var(--ok);}
+  .grid-label .dot.against{background:var(--red);}
+
+  /* Star rows */
+  .srow{display:flex;align-items:center;justify-content:space-between;padding:10px 2px;border-bottom:1px solid #f1f3f5;}
+  .srow:last-child{border-bottom:none;}
+  .srow .nm{font-size:14px;font-weight:600;color:var(--ink);}
+  .stars{display:flex;gap:3px;}
+  .star{font-size:22px;line-height:1;color:var(--gold-off);cursor:pointer;transition:transform .08s;-webkit-tap-highlight-color:transparent;}
+  .star:hover{transform:scale(1.1);}
+  .star.lit{color:var(--gold);}
+
+  /* Suggested grade */
+  .sugg-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .sugg-letter{font-size:34px;font-weight:800;width:56px;height:56px;border-radius:12px;display:flex;align-items:center;justify-content:center;}
+  .sugg-letter.A{background:rgba(200,16,46,.1);color:var(--red);}
+  .sugg-letter.B{background:rgba(11,132,87,.12);color:var(--ok);}
+  .sugg-letter.C{background:#eceff1;color:var(--slate);}
+  .sugg-letter.D{background:#f3e8e8;color:#8a8a8a;}
+  .sugg-meta{flex:1;min-width:140px;}
+  .sugg-score{font-size:13px;font-weight:700;color:var(--ink);}
+  .sugg-adj{font-size:11px;color:var(--mute);margin-top:2px;}
+  .apply-btn{border:1px solid var(--red);background:#fff;color:var(--red);border-radius:10px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .apply-btn:hover{background:var(--red);color:#fff;}
+  .sugg-flags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
+  .tag{font-size:11px;font-weight:600;padding:5px 10px;border-radius:999px;}
+  .tag.up{background:rgba(11,132,87,.1);color:var(--ok);}
+  .tag.dn{background:rgba(200,16,46,.08);color:var(--red);}
+  .confidence{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 9px;border-radius:999px;margin-left:6px;}
+  .confidence.full{background:rgba(11,132,87,.12);color:var(--ok);}
+  .confidence.good{background:rgba(11,132,87,.08);color:var(--ok);}
+  .confidence.partial{background:#fff3cd;color:#856404;}
+  .confidence.low{background:#f8d7da;color:#721c24;}
+
+  /* Status row */
+  .status-row{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#f9fafb;border-radius:10px;margin-bottom:12px;}
+  .status-dot{width:10px;height:10px;border-radius:50%;}
+  .status-dot.draft{background:var(--gold);}
+  .status-dot.saved{background:var(--ok);}
+  .status-dot.empty{background:var(--line);}
+  .status-text{font-size:12px;color:var(--slate);font-weight:500;}
+  .auto-save{margin-left:auto;font-size:11px;color:var(--mute);}
 
   /* Bottom bar */
   .bottom-bar{
     position:fixed;bottom:0;left:0;right:0;
-    background:rgba(255,255,255,.95);backdrop-filter:blur(8px);
-    border-top:1px solid var(--line);padding:12px 16px;
+    background:rgba(255,255,255,.96);backdrop-filter:blur(10px);
+    border-top:1px solid var(--line);padding:12px 14px;z-index:100;
   }
-  .bottom-inner{max-width:600px;margin:0 auto;display:flex;gap:10px;}
+  .bottom-inner{max-width:700px;margin:0 auto;display:flex;gap:10px;flex-direction:column;}
+  .btn-row{display:flex;gap:10px;}
   .btn{
-    flex:1;padding:14px;border-radius:10px;font-size:15px;font-weight:700;
-    cursor:pointer;font-family:inherit;border:none;
+    flex:1;padding:14px;border-radius:11px;font-size:15px;font-weight:700;
+    cursor:pointer;font-family:inherit;border:none;text-align:center;
   }
   .btn-primary{background:var(--red);color:#fff;}
+  .btn-primary:hover{background:var(--red-dk);}
+  .btn-primary:disabled{background:var(--mute);cursor:not-allowed;}
   .btn-secondary{background:#fff;color:var(--slate);border:1px solid var(--line);}
+  .btn-secondary:hover{background:#fafbfc;border-color:var(--mute);}
+  .btn-success{background:var(--ok);color:#fff;}
+  .save-status{text-align:center;font-size:12px;color:var(--mute);padding-top:4px;}
 
-  /* Status indicator */
-  .status-row{display:flex;align-items:center;gap:8px;padding:10px 14px;background:#f9fafb;border-radius:8px;margin-bottom:12px;}
-  .status-dot{width:10px;height:10px;border-radius:50%;}
-  .status-dot.draft{background:var(--gold);}
-  .status-dot.saved{background:var(--ok);}
-  .status-text{font-size:12px;color:var(--slate);font-weight:500;}
-  .auto-save{margin-left:auto;font-size:11px;color:var(--mute);}
+  /* Toast */
+  .toast{
+    position:fixed;top:80px;left:50%;transform:translateX(-50%);
+    padding:12px 20px;border-radius:10px;font-size:14px;font-weight:600;
+    z-index:200;opacity:0;transition:opacity .3s;pointer-events:none;
+  }
+  .toast.show{opacity:1;}
+  .toast.ok{background:var(--ok);color:#fff;}
+  .toast.err{background:#e53935;color:#fff;}
+
+  /* Empty state */
+  .empty-state{text-align:center;padding:40px 20px;color:var(--mute);}
+  .empty-state .icon{font-size:48px;margin-bottom:12px;}
+  .empty-state p{font-size:14px;line-height:1.5;}
 </style>
 </head>
 <body>
 
+<div id="toast" class="toast"></div>
+
+<!-- Header -->
+<div class="header">
+  <div class="crest">RB</div>
+  <div><h1>Scout Capture</h1><span>Multi-player mode</span></div>
+</div>
+
 <!-- Player Tabs Bar -->
-<div class="tabs-bar">
-  <div class="player-tab active" data-id="1">
-    <div class="jersey">7</div>
-    <div class="info">
-      <div class="pos">RW</div>
-      <div class="name">M. Diakite</div>
-    </div>
-    <div class="badge"></div>
-  </div>
-  <div class="player-tab" data-id="2">
-    <div class="jersey">14</div>
-    <div class="info">
-      <div class="pos">CM</div>
-      <div class="name">J. Smith</div>
-    </div>
-    <div class="badge"></div>
-  </div>
-  <div class="player-tab" data-id="3">
-    <div class="jersey">23</div>
-    <div class="info">
-      <div class="pos">CB</div>
-      <div class="name">—</div>
-    </div>
-    <div class="badge empty"></div>
-  </div>
-  <button class="add-tab">+</button>
+<div class="tabs-bar" id="tabsBar">
+  <!-- Tabs injected by JS -->
 </div>
 
-<!-- Player 1 Card -->
-<div class="player-card active" data-id="1">
-  <div class="status-row">
-    <div class="status-dot draft"></div>
-    <span class="status-text">Draft — 3 observations</span>
-    <span class="auto-save">Auto-saved 12s ago</span>
-  </div>
-
-  <div class="card">
-    <div class="card-h"><span class="ico">●</span><h2>Quick ID</h2></div>
-    <div class="card-b">
-      <div class="row">
-        <div class="field" style="flex:0 0 70px;">
-          <label>Jersey</label>
-          <input type="number" value="7" style="text-align:center;font-weight:700;">
-        </div>
-        <div class="field">
-          <label>Name (optional)</label>
-          <input type="text" value="M. Diakite" placeholder="Fill later...">
-        </div>
-      </div>
-      <div style="margin-top:10px;">
-        <label style="display:block;font-size:10px;font-weight:700;text-transform:uppercase;color:#52606d;margin-bottom:6px;">Position</label>
-        <div class="pos-chips">
-          <div class="pos-chip">GK</div>
-          <div class="pos-chip">CB</div>
-          <div class="pos-chip">FB</div>
-          <div class="pos-chip">CDM</div>
-          <div class="pos-chip">CM</div>
-          <div class="pos-chip on">RW</div>
-          <div class="pos-chip">LW</div>
-          <div class="pos-chip">ST</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-h"><span class="ico">★</span><h2>Quick Ratings</h2></div>
-    <div class="card-b">
-      <div class="quick-rate">
-        <span class="attr">1v1 dribbling</span>
-        <div class="stars">
-          <span class="star lit">★</span><span class="star lit">★</span><span class="star lit">★</span><span class="star lit">★</span><span class="star">★</span>
-        </div>
-      </div>
-      <div class="quick-rate">
-        <span class="attr">Final ball</span>
-        <div class="stars">
-          <span class="star lit">★</span><span class="star lit">★</span><span class="star lit">★</span><span class="star">★</span><span class="star">★</span>
-        </div>
-      </div>
-      <div class="quick-rate">
-        <span class="attr">Pressing</span>
-        <div class="stars">
-          <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
-        </div>
-      </div>
-      <div class="quick-rate">
-        <span class="attr">Defensive tracking</span>
-        <div class="stars">
-          <span class="star lit">★</span><span class="star lit">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-h"><span class="ico">✎</span><h2>Notes</h2></div>
-    <div class="card-b">
-      <textarea placeholder="Quick observations...">12' great turn on the ball, beat defender easily
-34' final ball lacking, overhit cross
-41' good recovery run</textarea>
-    </div>
-  </div>
-</div>
-
-<!-- Player 2 Card -->
-<div class="player-card" data-id="2">
-  <div class="status-row">
-    <div class="status-dot draft"></div>
-    <span class="status-text">Draft — 1 observation</span>
-    <span class="auto-save">Auto-saved 45s ago</span>
-  </div>
-
-  <div class="card">
-    <div class="card-h"><span class="ico">●</span><h2>Quick ID</h2></div>
-    <div class="card-b">
-      <div class="row">
-        <div class="field" style="flex:0 0 70px;">
-          <label>Jersey</label>
-          <input type="number" value="14" style="text-align:center;font-weight:700;">
-        </div>
-        <div class="field">
-          <label>Name (optional)</label>
-          <input type="text" value="J. Smith" placeholder="Fill later...">
-        </div>
-      </div>
-      <div style="margin-top:10px;">
-        <label style="display:block;font-size:10px;font-weight:700;text-transform:uppercase;color:#52606d;margin-bottom:6px;">Position</label>
-        <div class="pos-chips">
-          <div class="pos-chip">GK</div>
-          <div class="pos-chip">CB</div>
-          <div class="pos-chip">FB</div>
-          <div class="pos-chip">CDM</div>
-          <div class="pos-chip on">CM</div>
-          <div class="pos-chip">RW</div>
-          <div class="pos-chip">LW</div>
-          <div class="pos-chip">ST</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-h"><span class="ico">★</span><h2>Quick Ratings</h2></div>
-    <div class="card-b">
-      <div class="quick-rate">
-        <span class="attr">Press resistance</span>
-        <div class="stars">
-          <span class="star lit">★</span><span class="star lit">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
-        </div>
-      </div>
-      <div class="quick-rate">
-        <span class="attr">Passing range</span>
-        <div class="stars">
-          <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
-        </div>
-      </div>
-      <div class="quick-rate">
-        <span class="attr">Ball-winning</span>
-        <div class="stars">
-          <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
-        </div>
-      </div>
-      <div class="quick-rate">
-        <span class="attr">Positioning</span>
-        <div class="stars">
-          <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-h"><span class="ico">✎</span><h2>Notes</h2></div>
-    <div class="card-b">
-      <textarea placeholder="Quick observations...">22' gave ball away under pressure twice</textarea>
-    </div>
-  </div>
-</div>
-
-<!-- Player 3 Card (minimal) -->
-<div class="player-card" data-id="3">
-  <div class="status-row">
-    <div class="status-dot empty" style="background:var(--line);"></div>
-    <span class="status-text">New — no data yet</span>
-  </div>
-
-  <div class="card">
-    <div class="card-h"><span class="ico">●</span><h2>Quick ID</h2></div>
-    <div class="card-b">
-      <div class="row">
-        <div class="field" style="flex:0 0 70px;">
-          <label>Jersey</label>
-          <input type="number" value="23" style="text-align:center;font-weight:700;">
-        </div>
-        <div class="field">
-          <label>Name (optional)</label>
-          <input type="text" placeholder="Fill later...">
-        </div>
-      </div>
-      <div style="margin-top:10px;">
-        <label style="display:block;font-size:10px;font-weight:700;text-transform:uppercase;color:#52606d;margin-bottom:6px;">Position</label>
-        <div class="pos-chips">
-          <div class="pos-chip">GK</div>
-          <div class="pos-chip on">CB</div>
-          <div class="pos-chip">FB</div>
-          <div class="pos-chip">CDM</div>
-          <div class="pos-chip">CM</div>
-          <div class="pos-chip">RW</div>
-          <div class="pos-chip">LW</div>
-          <div class="pos-chip">ST</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-h"><span class="ico">★</span><h2>Quick Ratings</h2></div>
-    <div class="card-b">
-      <div class="quick-rate">
-        <span class="attr">1v1 defending</span>
-        <div class="stars">
-          <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
-        </div>
-      </div>
-      <div class="quick-rate">
-        <span class="attr">Aerial duels</span>
-        <div class="stars">
-          <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
-        </div>
-      </div>
-      <div class="quick-rate">
-        <span class="attr">Ball-playing</span>
-        <div class="stars">
-          <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
-        </div>
-      </div>
-      <div class="quick-rate">
-        <span class="attr">Anticipation</span>
-        <div class="stars">
-          <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-h"><span class="ico">✎</span><h2>Notes</h2></div>
-    <div class="card-b">
-      <textarea placeholder="Quick observations..."></textarea>
-    </div>
+<!-- Main Content -->
+<div class="main">
+  <div id="cardsContainer">
+    <!-- Player cards injected by JS -->
   </div>
 </div>
 
 <!-- Bottom Bar -->
 <div class="bottom-bar">
   <div class="bottom-inner">
-    <button class="btn btn-secondary">Expand Full</button>
-    <button class="btn btn-primary">Save All (3)</button>
+    <div class="btn-row">
+      <button class="btn btn-secondary" id="saveThisBtn">Save This</button>
+      <button class="btn btn-primary" id="saveAllBtn">Save All (0)</button>
+    </div>
+    <div class="save-status" id="saveStatus">Auto-saves locally every 30s</div>
   </div>
 </div>
 
 <script>
-// Tab switching
-document.querySelectorAll('.player-tab').forEach(tab => {
-  tab.onclick = () => {
-    document.querySelectorAll('.player-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.player-card').forEach(c => c.classList.remove('active'));
-    tab.classList.add('active');
-    document.querySelector(`.player-card[data-id="${tab.dataset.id}"]`).classList.add('active');
-  };
-});
+const POSITIONS = ["GK","RB","CB","LB","CDM","CM","LW","RW","ST"];
+const WEAPONS = ["1v1 Attacker","1v1 Defender","Ball Carrier","Presser","Finisher","Playmaker","Aerial","Engine","Game Reader","Press Resistant","Physical","Speed","Quarterback","Channel Runner","In Behind Specialist"];
 
-// Position chip toggle
-document.querySelectorAll('.pos-chip').forEach(chip => {
-  chip.onclick = () => {
-    chip.parentElement.querySelectorAll('.pos-chip').forEach(c => c.classList.remove('on'));
-    chip.classList.add('on');
-  };
-});
+const GRIDS = {
+  GK: {
+    title:"Goalkeeper",
+    withBall:["Distribution (feet)","Distribution (hands)","Playing out from back","Decision making"],
+    againstBall:["Shot-stopping","1v1 saving","Commanding box","Sweeping / covering"]
+  },
+  FB: {
+    title:"Full-back",
+    withBall:["Attacking runs","Crossing / final ball","Carrying ball","Combination play"],
+    againstBall:["1v1 defending","Defensive positioning","Recovery runs","Aerial duels"]
+  },
+  CB: {
+    title:"Centre-back",
+    withBall:["Ball-playing","Passing range","Carrying into midfield","Composure on ball"],
+    againstBall:["1v1 defending","Aerial duels","Covering / sliding","Defensive anticipation"]
+  },
+  CDM: {
+    title:"Holding mid (6)",
+    withBall:["Press resistance","Passing range","Ball progression","Receiving under pressure"],
+    againstBall:["Ball-winning","Defensive positioning","Tackling","Interceptions"]
+  },
+  CM: {
+    title:"Central mid (8)",
+    withBall:["Press resistance","Passing range","Final third entries","Dribbling / carrying"],
+    againstBall:["Ball-winning","Defensive work rate","Positioning","Pressing triggers"]
+  },
+  WING: {
+    title:"Winger",
+    withBall:["1v1 dribbling","Final ball / crossing","Finishing","Movement off ball"],
+    againstBall:["Defensive tracking","Pressing","Recovery runs","1v1 defending"]
+  },
+  ST: {
+    title:"Striker",
+    withBall:["Finishing","Movement / runs","Link-up play","1v1 / dribbling"],
+    againstBall:["Pressing from front","Hold-up defending","Aerial contests","Work rate"]
+  }
+};
+const POS_TO_GRID = {GK:"GK",RB:"FB",LB:"FB",CB:"CB",CDM:"CDM",CM:"CM",LW:"WING",RW:"WING",ST:"ST"};
 
-// Star rating
-document.querySelectorAll('.quick-rate .stars').forEach(starsContainer => {
-  const stars = starsContainer.querySelectorAll('.star');
-  stars.forEach((star, idx) => {
-    star.onclick = () => {
-      stars.forEach((s, i) => s.classList.toggle('lit', i <= idx));
+// State
+let players = [];
+let activePlayerId = null;
+let nextId = 1;
+
+function createPlayer(jersey = '') {
+  return {
+    id: nextId++,
+    jersey: jersey,
+    name: '',
+    club: '',
+    yob: '',
+    foot: '',
+    phys: '',
+    event: '',
+    date: new Date().toISOString().split('T')[0],
+    pos: null,
+    overall: null,
+    press: 0,
+    grid: {},
+    weapons: new Set(),
+    notes: '',
+    saved: false,
+    hasData: false
+  };
+}
+
+function showToast(msg, type = 'ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function updateHasData(player) {
+  player.hasData = !!(
+    player.jersey || player.name || player.pos || player.overall ||
+    player.notes || Object.values(player.grid).some(v => v > 0) ||
+    player.weapons.size > 0
+  );
+}
+
+function countWithData() {
+  return players.filter(p => p.hasData).length;
+}
+
+function renderTabs() {
+  const bar = document.getElementById('tabsBar');
+  bar.innerHTML = '';
+
+  players.forEach(p => {
+    const tab = document.createElement('div');
+    tab.className = 'player-tab' + (p.id === activePlayerId ? ' active' : '');
+    tab.dataset.id = p.id;
+
+    let badgeClass = 'empty';
+    if (p.saved) badgeClass = 'saved';
+    else if (p.hasData) badgeClass = '';
+
+    tab.innerHTML = `
+      <div class="jersey">${p.jersey || '?'}</div>
+      <div class="info">
+        <div class="pos">${p.pos || '—'}</div>
+        <div class="name">${p.name || 'New player'}</div>
+      </div>
+      <div class="badge ${badgeClass}"></div>
+      <button class="del-btn" data-id="${p.id}">×</button>
+    `;
+
+    tab.onclick = (e) => {
+      if (e.target.classList.contains('del-btn')) return;
+      activePlayerId = p.id;
+      renderAll();
+    };
+
+    tab.querySelector('.del-btn').onclick = (e) => {
+      e.stopPropagation();
+      deletePlayer(p.id);
+    };
+
+    bar.appendChild(tab);
+  });
+
+  // Add button
+  const addBtn = document.createElement('button');
+  addBtn.className = 'add-tab';
+  addBtn.textContent = '+';
+  addBtn.onclick = () => {
+    const newPlayer = createPlayer();
+    players.push(newPlayer);
+    activePlayerId = newPlayer.id;
+    renderAll();
+  };
+  bar.appendChild(addBtn);
+
+  // Update save all button
+  const count = countWithData();
+  document.getElementById('saveAllBtn').textContent = `Save All (${count})`;
+  document.getElementById('saveAllBtn').disabled = count === 0;
+}
+
+function deletePlayer(id) {
+  if (players.length === 1) {
+    showToast('Need at least one player', 'err');
+    return;
+  }
+  players = players.filter(p => p.id !== id);
+  if (activePlayerId === id) {
+    activePlayerId = players[0].id;
+  }
+  renderAll();
+  showToast('Player removed');
+}
+
+function renderCards() {
+  const container = document.getElementById('cardsContainer');
+  container.innerHTML = '';
+
+  players.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'player-card' + (p.id === activePlayerId ? ' active' : '');
+    card.dataset.id = p.id;
+    card.innerHTML = buildCardHTML(p);
+    container.appendChild(card);
+  });
+
+  // Bind events
+  bindCardEvents();
+}
+
+function buildCardHTML(p) {
+  const gridKey = p.pos ? POS_TO_GRID[p.pos] : null;
+  const gridData = gridKey ? GRIDS[gridKey] : null;
+
+  let statusClass = 'empty';
+  let statusText = 'New — no data yet';
+  if (p.saved) { statusClass = 'saved'; statusText = 'Saved to database'; }
+  else if (p.hasData) { statusClass = 'draft'; statusText = 'Draft — unsaved changes'; }
+
+  return `
+    <div class="status-row">
+      <div class="status-dot ${statusClass}"></div>
+      <span class="status-text">${statusText}</span>
+      <span class="auto-save">${p.saved ? '✓ Synced' : ''}</span>
+    </div>
+
+    <!-- PLAYER INFO -->
+    <div class="card">
+      <div class="card-h"><span class="ico">●</span><h2>Player Info</h2></div>
+      <div class="card-b">
+        <div class="grid2">
+          <div class="field">
+            <label>Player Name</label>
+            <input type="text" data-field="name" value="${p.name}" placeholder="e.g., Mamoudou Diakite">
+          </div>
+          <div class="field">
+            <label>Club</label>
+            <input type="text" data-field="club" value="${p.club}" placeholder="e.g., Penn Fusion">
+          </div>
+          <div class="field">
+            <label>Jersey #</label>
+            <input type="number" data-field="jersey" value="${p.jersey}" placeholder="#">
+          </div>
+          <div class="field">
+            <label>Year of Birth</label>
+            <input type="number" data-field="yob" value="${p.yob}" placeholder="2012">
+          </div>
+          <div class="field">
+            <label>Foot</label>
+            <select data-field="foot">
+              <option value="">Select…</option>
+              <option ${p.foot==='Right'?'selected':''}>Right</option>
+              <option ${p.foot==='Left'?'selected':''}>Left</option>
+              <option ${p.foot==='Both'?'selected':''}>Both</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Physical Profile</label>
+            <select data-field="phys">
+              <option value="">Select…</option>
+              <option ${p.phys==='Early developer'?'selected':''}>Early developer</option>
+              <option ${p.phys==='On age'?'selected':''}>On age</option>
+              <option ${p.phys==='Undersized / late developer'?'selected':''}>Undersized / late developer</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Event</label>
+            <input type="text" data-field="event" value="${p.event}" placeholder="e.g., ECNL Playoffs">
+          </div>
+          <div class="field">
+            <label>Date</label>
+            <input type="date" data-field="date" value="${p.date}">
+          </div>
+        </div>
+        <div class="field" style="margin-top:14px;">
+          <label>Primary Position</label>
+          <div class="chips pos-chips">
+            ${POSITIONS.map(pos => `<div class="chip ${p.pos===pos?'on':''}" data-pos="${pos}">${pos}</div>`).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EVERY PLAYER -->
+    <div class="card">
+      <div class="card-h"><span class="ico">★</span><h2>Every Player</h2></div>
+      <div class="card-b">
+        <div class="field">
+          <label>Overall — the routing call</label>
+          <div class="seg overall-seg">
+            <button data-g="A" class="${p.overall==='A'?'on':''}"><span class="g">A</span><span class="t">Priority</span></button>
+            <button data-g="B" class="${p.overall==='B'?'on':''}"><span class="g">B</span><span class="t">Monitor</span></button>
+            <button data-g="C" class="${p.overall==='C'?'on':''}"><span class="g">C</span><span class="t">Database</span></button>
+            <button data-g="D" class="${p.overall==='D'?'on':''}"><span class="g">D</span><span class="t">Pass</span></button>
+          </div>
+        </div>
+        <div class="field" style="margin-top:14px;">
+          <label>Pressing / Work-rate (RB DNA)</label>
+          <div class="srow" style="border:none;padding:8px 0;">
+            <span class="nm">Pressing intensity</span>
+            <div class="stars press-stars">
+              ${[1,2,3,4,5].map(i => `<span class="star ${p.press>=i?'lit':''}" data-val="${i}">★</span>`).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- POSITION GRID -->
+    <div class="card">
+      <div class="card-h"><span class="ico">▥</span><h2>${gridData ? gridData.title + ' — Grid' : 'Position Grid'}</h2></div>
+      <div class="card-b grid-body">
+        ${gridData ? buildGridHTML(p, gridData) : '<div class="empty-state"><p>Select a position above to load the grading grid.</p></div>'}
+      </div>
+    </div>
+
+    <!-- SUGGESTED GRADE -->
+    <div class="card sugg-card" style="${gridData && Object.values(p.grid).some(v=>v>0) ? '' : 'display:none'}">
+      <div class="card-h"><span class="ico">⚖</span><h2>Suggested Grade</h2></div>
+      <div class="card-b">
+        ${buildSuggestedGradeHTML(p)}
+      </div>
+    </div>
+
+    <!-- SPECIAL WEAPONS -->
+    <div class="card">
+      <div class="card-h"><span class="ico">✦</span><h2>Special Weapons</h2></div>
+      <div class="card-b">
+        <p style="font-size:12px;color:var(--mute);margin-bottom:10px;">Identifying traits — select any</p>
+        <div class="chips weapon-chips">
+          ${WEAPONS.map(w => `<div class="chip ${p.weapons.has(w)?'on':''}" data-weapon="${w}">${w}</div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- OBSERVATIONS -->
+    <div class="card">
+      <div class="card-h"><span class="ico">✎</span><h2>Observations</h2></div>
+      <div class="card-b">
+        <div class="field">
+          <label>Shorthand notes</label>
+          <textarea data-field="notes" placeholder="Aerial presence. Good 1v1 defending actions.">${p.notes}</textarea>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function buildGridHTML(p, gridData) {
+  let html = '';
+
+  // With Ball
+  html += '<div class="grid-section"><div class="grid-label"><span class="dot with"></span>With Ball</div>';
+  gridData.withBall.forEach(attr => {
+    const val = p.grid[attr] || 0;
+    html += `
+      <div class="srow">
+        <span class="nm">${attr}</span>
+        <div class="stars grid-stars" data-attr="${attr}">
+          ${[1,2,3,4,5].map(i => `<span class="star ${val>=i?'lit':''}" data-val="${i}">★</span>`).join('')}
+        </div>
+      </div>
+    `;
+  });
+  html += '</div>';
+
+  // Against Ball
+  html += '<div class="grid-section"><div class="grid-label"><span class="dot against"></span>Against Ball</div>';
+  gridData.againstBall.forEach(attr => {
+    const val = p.grid[attr] || 0;
+    html += `
+      <div class="srow">
+        <span class="nm">${attr}</span>
+        <div class="stars grid-stars" data-attr="${attr}">
+          ${[1,2,3,4,5].map(i => `<span class="star ${val>=i?'lit':''}" data-val="${i}">★</span>`).join('')}
+        </div>
+      </div>
+    `;
+  });
+  html += '</div>';
+
+  return html;
+}
+
+function buildSuggestedGradeHTML(p) {
+  if (!p.pos) return '';
+  const gridKey = POS_TO_GRID[p.pos];
+  const gridData = GRIDS[gridKey];
+  const allAttrs = [...gridData.withBall, ...gridData.againstBall];
+  const rated = allAttrs.filter(a => (p.grid[a] || 0) > 0);
+  if (rated.length === 0) return '';
+
+  // Simple weighted average
+  const avg = rated.reduce((sum, a) => sum + p.grid[a], 0) / rated.length;
+  let letter = avg >= 4 ? 'A' : avg >= 3 ? 'B' : avg >= 2 ? 'C' : 'D';
+  const thin = rated.length < 3;
+  if (thin && letter === 'A') letter = 'B';
+
+  let confidence, confClass;
+  if (rated.length >= 7) { confidence = 'Full picture'; confClass = 'full'; }
+  else if (rated.length >= 5) { confidence = 'Good sample'; confClass = 'good'; }
+  else if (rated.length >= 3) { confidence = 'Partial view'; confClass = 'partial'; }
+  else { confidence = 'Limited data'; confClass = 'low'; }
+
+  return `
+    <div class="sugg-top">
+      <div class="sugg-letter ${thin ? '' : letter}">${thin ? '?' : letter}</div>
+      <div class="sugg-meta">
+        <div class="sugg-score">Average ${avg.toFixed(1)}/5 · ${rated.length}/8 seen <span class="confidence ${confClass}">${confidence}</span></div>
+        <div class="sugg-adj">${thin ? 'Need more observations for confident grade' : ''}</div>
+      </div>
+      <button class="apply-btn" data-grade="${letter}">Apply</button>
+    </div>
+    <div class="sugg-flags">
+      ${rated.filter(a => p.grid[a] === 5).map(a => `<span class="tag up">Elite · ${a}</span>`).join('')}
+      ${rated.filter(a => p.grid[a] === 1).map(a => `<span class="tag dn">Concern · ${a}</span>`).join('')}
+    </div>
+  `;
+}
+
+function bindCardEvents() {
+  const activeCard = document.querySelector('.player-card.active');
+  if (!activeCard) return;
+  const player = players.find(p => p.id === activePlayerId);
+  if (!player) return;
+
+  // Text inputs
+  activeCard.querySelectorAll('input[data-field], select[data-field], textarea[data-field]').forEach(el => {
+    el.oninput = el.onchange = () => {
+      player[el.dataset.field] = el.value;
+      player.saved = false;
+      updateHasData(player);
+      renderTabs();
     };
   });
-});
+
+  // Position chips
+  activeCard.querySelectorAll('.pos-chips .chip').forEach(chip => {
+    chip.onclick = () => {
+      activeCard.querySelectorAll('.pos-chips .chip').forEach(c => c.classList.remove('on'));
+      chip.classList.add('on');
+      player.pos = chip.dataset.pos;
+      player.grid = {};
+      player.saved = false;
+      updateHasData(player);
+      renderAll();
+    };
+  });
+
+  // Overall grade
+  activeCard.querySelectorAll('.overall-seg button').forEach(btn => {
+    btn.onclick = () => {
+      activeCard.querySelectorAll('.overall-seg button').forEach(b => b.classList.remove('on'));
+      btn.classList.add('on');
+      player.overall = btn.dataset.g;
+      player.saved = false;
+      updateHasData(player);
+      renderTabs();
+    };
+  });
+
+  // Pressing stars
+  activeCard.querySelectorAll('.press-stars .star').forEach(star => {
+    star.onclick = () => {
+      const val = parseInt(star.dataset.val);
+      player.press = player.press === val ? 0 : val;
+      player.saved = false;
+      updateHasData(player);
+      renderAll();
+    };
+  });
+
+  // Grid stars
+  activeCard.querySelectorAll('.grid-stars').forEach(starsContainer => {
+    const attr = starsContainer.dataset.attr;
+    starsContainer.querySelectorAll('.star').forEach(star => {
+      star.onclick = () => {
+        const val = parseInt(star.dataset.val);
+        player.grid[attr] = player.grid[attr] === val ? 0 : val;
+        player.saved = false;
+        updateHasData(player);
+        renderAll();
+      };
+    });
+  });
+
+  // Weapon chips
+  activeCard.querySelectorAll('.weapon-chips .chip').forEach(chip => {
+    chip.onclick = () => {
+      const w = chip.dataset.weapon;
+      if (player.weapons.has(w)) {
+        player.weapons.delete(w);
+        chip.classList.remove('on');
+      } else {
+        player.weapons.add(w);
+        chip.classList.add('on');
+      }
+      player.saved = false;
+      updateHasData(player);
+      renderTabs();
+    };
+  });
+
+  // Apply suggested grade
+  const applyBtn = activeCard.querySelector('.apply-btn');
+  if (applyBtn) {
+    applyBtn.onclick = () => {
+      player.overall = applyBtn.dataset.grade;
+      player.saved = false;
+      updateHasData(player);
+      renderAll();
+    };
+  }
+}
+
+function renderAll() {
+  renderTabs();
+  renderCards();
+}
+
+// Save functions
+document.getElementById('saveThisBtn').onclick = () => {
+  const player = players.find(p => p.id === activePlayerId);
+  if (!player) return;
+  if (!player.hasData) {
+    showToast('No data to save', 'err');
+    return;
+  }
+  player.saved = true;
+  showToast('Player saved!');
+  renderAll();
+};
+
+document.getElementById('saveAllBtn').onclick = () => {
+  const toSave = players.filter(p => p.hasData && !p.saved);
+  if (toSave.length === 0) {
+    showToast('All players already saved', 'ok');
+    return;
+  }
+  toSave.forEach(p => p.saved = true);
+  showToast(`Saved ${toSave.length} player${toSave.length > 1 ? 's' : ''}!`);
+  renderAll();
+};
+
+// Initialize with one empty player
+players.push(createPlayer());
+activePlayerId = players[0].id;
+renderAll();
 </script>
 </body>
 </html>
