@@ -123,8 +123,9 @@
   .confidence.partial{background:#fff3cd;color:#856404;}
   .confidence.low{background:#f8d7da;color:#721c24;}
 
-  /* Voice */
-  .obs-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+  /* Observations */
+  .obs-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .obs-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--slate);}
   .mic{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 13px;font-size:13px;font-weight:600;color:var(--slate);cursor:pointer;font-family:inherit;}
   .mic .dot{width:9px;height:9px;border-radius:50%;background:var(--mute);}
   .mic.live{border-color:var(--red);color:var(--red);}
@@ -426,8 +427,11 @@ function buildCardHTML(p) {
     <div class="card">
       <div class="card-h"><span class="ico">✎</span><h2>Observations</h2></div>
       <div class="card-b">
-        <div class="obs-head"><label class="field" style="margin:0;"><span style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--slate);">Shorthand notes</span></label><button class="mic" data-player="${p.id}"><span class="dot"></span><span class="mic-txt">Speak</span></button></div>
-        <textarea data-field="notes" placeholder="Aerial presence. Good 1v1 defending actions.">${p.notes}</textarea>
+        <div class="obs-row">
+          <label class="obs-label">Shorthand Notes</label>
+          <button class="mic" data-player="${p.id}"><span class="dot"></span><span class="mic-txt">Speak</span></button>
+        </div>
+        <textarea data-field="notes" placeholder="1v1 defending, positioning, work rate, pressing...">${p.notes}</textarea>
       </div>
     </div>
   `;
