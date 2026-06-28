@@ -361,7 +361,7 @@ const DEFENSIVE_ATTRS = new Set([
   "Defensive work rate","Positioning","Pressing triggers","Defensive tracking","Pressing",
   "Pressing from front","Hold-up defending","Aerial contests","Work rate"
 ]);
-const WEAPONS = ["1v1 Attacker","1v1 Defender","Ball Carrier","Pressing","Finisher","Playmaker","Aerial","Engine","Game Reader","Press Resistant","Physical","Speed"];
+const WEAPONS = ["1v1 Attacker","1v1 Defender","Ball Carrier","Presser","Finisher","Playmaker","Aerial","Engine","Game Reader","Press Resistant","Physical","Speed","Quarterback","Channel Runner","In Behind Specialist"];
 const ROUTES={
   A:{label:"Priority — full report + shadow-team", cls:"A"},
   B:{label:"Monitor list — write full report", cls:"B"},
@@ -516,21 +516,12 @@ function recompute(){
   let wb=0; if(top2.some(a=>state.grid[a]===5)) wb=0.3; else if(rated.some(a=>state.grid[a]===5)) wb=0.15;
   let hp=0; if(top2.some(a=>state.grid[a]===1)) hp=0.4; else if(rated.some(a=>state.grid[a]===1)) hp=0.3;
 
-  // Low pressing penalty (can't be A without pressing for RB)
-  let pressPenalty = 0;
-  let letterCap = null;
-  if(state.press <= 2 && state.press > 0) {
-    pressPenalty = 0.2;
-    letterCap = "B"; // Can't be A without pressing
-  }
-
-  const score = Math.max(0, Math.min(5, base + wb - hp - pressPenalty));
+  const score = Math.max(0, Math.min(5, base + wb - hp));
   let letter = score>=3.8?"A" : score>=2.8?"B" : score>=2.0?"C" : "D";
 
-  // Apply caps
+  // Apply thin sample cap
   const thin = rated.length < 3;
   if(thin && letter==="A") letter="B";
-  if(letterCap && letter==="A") letter = letterCap;
 
   // Confidence level based on observations
   let confidence, confidenceClass;
@@ -554,7 +545,6 @@ function recompute(){
   if(wb) bits.push("+"+wb.toFixed(2)+" elite");
   if(hp) bits.push("−"+hp.toFixed(2)+" concern");
   if(pressMultiplier > 1) bits.push("+"+(((pressMultiplier-1)*100).toFixed(0))+"% press boost");
-  if(pressPenalty) bits.push("−"+pressPenalty.toFixed(2)+" low press");
   document.getElementById("sAdj").textContent = bits.length ? bits.join("  ") : "no modifiers";
 
   const flags=document.getElementById("sFlags"); flags.innerHTML="";
@@ -577,7 +567,6 @@ function recompute(){
 
   const notes=[];
   if(thin) notes.push("Thin sample — provisional grade.");
-  if(letterCap) notes.push("Low pressing caps grade at "+letterCap+" (RB DNA).");
   if(state.overall && state.overall!==letter) notes.push("You graded "+state.overall+"; grid says "+letter+".");
   document.getElementById("sMismatch").innerHTML = notes.join(" ");
 }
